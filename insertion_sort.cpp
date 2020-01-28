@@ -6,7 +6,7 @@ int insertionSort(int length, int *A){
 
 	int i = 1;
 	while (i < length){
-		int j = 1;
+		int j = i;
 		while (j > 0 && A[j-1] > A[j]){
 			swap(A[j], A[j-1]);
 			j--;
@@ -17,7 +17,7 @@ int insertionSort(int length, int *A){
 
 }
 int main(){
-	int A[200]={5,4,3,2,1};
+	int A[200]={1,9,3,2,1};
 	insertionSort(5,A);
 	for (int i=0;i<5;i++){
 		cout<<A[i]<<" ";
