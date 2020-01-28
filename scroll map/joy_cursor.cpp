@@ -1,12 +1,3 @@
-/*
-  Name: Weichen Qiu
-  ID : 1578205
-
-  CMPUT 275 Winter 2020
-
-  Weekly Assignment 1: Joystick Cursor and Map
-*/
-
 // Adding libraries
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
