@@ -1,7 +1,8 @@
 #include<iostream>
 using namespace std;
 
-int quicksort(int length, int *a, int left_index, int right_index){
+int qsort(int length, int *a, int left_index, int right_index){
+	uint16_t startTime = millis();
 	if (left_index >= right_index){
 		// stop programs if left is past or equal to the right index
 		return 0;
@@ -25,12 +26,14 @@ int quicksort(int length, int *a, int left_index, int right_index){
 		}
 
 	}
+	uint16_t endTime = millis();
+	return endTime-startTime;
 }
 
 int main(){
 
 	int a[]={9,1,9,2,1};
-	quicksort(5,a,0,5);
+	qsort(5,a,0,5);
 
 	for (int i=0;i<5;i++){
 		cout<<a[i]<<" ";

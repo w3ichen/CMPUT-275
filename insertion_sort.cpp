@@ -1,9 +1,9 @@
 #include<iostream>
-
+#include<Arduino.h>
 using namespace std;
 
-int insertionSort(int length, int *A){
-
+int isort(int length, int *A){
+	uint16_t startTime = millis();
 	int i = 1;
 	while (i < length){
 		int j = i;
@@ -13,12 +13,14 @@ int insertionSort(int length, int *A){
 		}
 		i++;
 	}
+	uint16_t endTime = millis();
+	return endTime - startTime;
 
 
 }
 int main(){
 	int A[200]={1,9,3,2,1};
-	insertionSort(5,A);
+	isort(5,A);
 	for (int i=0;i<5;i++){
 		cout<<A[i]<<" ";
 	}
