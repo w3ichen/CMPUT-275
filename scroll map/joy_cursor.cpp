@@ -20,30 +20,10 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 #define JOY_DEADZONE 64
 #define CURSOR_SIZE 10
 
-// These constants are for the 2048 by 2048 map .
-# define MAP_WIDTH 2048
-# define MAP_HEIGHT 2048
-# define LAT_NORTH 5361858 l
-# define LAT_SOUTH 5340953 l
-# define LON_WEST -11368652 l
-# define LON_EAST -11333496 l
-// These functions convert between x/y map position and lat /lon
-// (and vice versa .)
-int32_t x_to_lon ( int16_t x ) {
-return map (x , 0 , MAP_WIDTH , LON_WEST , LON_EAST ) ;
-}
-int32_t y_to_lat ( int16_t y ) {
-return map (y , 0 , MAP_HEIGHT , LAT_NORTH , LAT_SOUTH ) ;
-}
-int16_t lon_to_x ( int32_t lon ) {
-return map ( lon , LON_WEST , LON_EAST , 0 , MAP_WIDTH ) ;
-}
-int16_t lat_to_y ( int32_t lat ) {
-return map ( lat , LAT_NORTH , LAT_SOUTH , 0 , MAP_HEIGHT ) ;
-}
-
 // the cursor position on the display
 int cursorX, cursorY;
+int yegMapX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
+int yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
 // forward declaration for redrawing the cursor
 void redrawCursor(uint16_t colour);
 
@@ -71,9 +51,7 @@ void setup() {
   tft.fillScreen(TFT_BLACK);
 
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns black
-	int yegMiddleX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
-	int yegMiddleY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
-	lcd_image_draw(&yegImage, &tft, yegMiddleX, yegMiddleY,
+	lcd_image_draw(&yegImage, &tft, yegMapX, yegMapY,
                  0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
 
   // initial cursor position is the middle of the screen
@@ -82,6 +60,18 @@ void setup() {
   // draw the first cursor
   redrawCursor(TFT_RED);
 }
+void scrollMap(){
+  // constrain to inside the YEG map
+
+  yegMapX = constrain(yegMapX,0,YEG_SIZE-DISPLAY_WIDTH-60);
+  yegMapY = constrain(yegMapY,0,YEG_SIZE-DISPLAY_HEIGHT);
+  // draw the map
+  lcd_image_draw(&yegImage, &tft, yegMapX, yegMapY,
+                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+  // reset cursor to middle
+  cursorX = (DISPLAY_WIDTH - 60)/2;
+  cursorY = DISPLAY_HEIGHT/2;
+}
 
 void redrawCursor(uint16_t colour) {
   /*
@@ -89,12 +79,33 @@ void redrawCursor(uint16_t colour) {
     Arguemnts: the color of the cursor
     Returns: void
   */
+  int initialX = cursorX;
+  int initialY = cursorY;
   // constrain cursor to edge of map
   cursorX = constrain(cursorX,CURSOR_SIZE/2, DISPLAY_WIDTH-60-(CURSOR_SIZE/2));
   cursorY = constrain(cursorY,CURSOR_SIZE/2,DISPLAY_HEIGHT-(CURSOR_SIZE/2));
+  if (cursorX - initialX < 0){
+    // too far to the right , scoll to the right
+    yegMapX += DISPLAY_WIDTH-60; 
+    scrollMap();
+  }else if (cursorX - initialX > 0){
+    // too far to the left, scroll to the left
+    yegMapX -= DISPLAY_WIDTH-60; 
+    scrollMap();
+  }
+  if (cursorY - initialY < 0){
+    // too far to the bottom , scoll down
+    yegMapY += DISPLAY_HEIGHT; 
+    scrollMap();
+  }else if (cursorY - initialY > 0){
+    // too far to the top, scroll to the top
+    yegMapY -= DISPLAY_HEIGHT; 
+    scrollMap();
+  }
   // draw the new cursor
   tft.fillRect(cursorX - CURSOR_SIZE/2, cursorY - CURSOR_SIZE/2,
                CURSOR_SIZE, CURSOR_SIZE, colour);
+
 }
 
 void moveCursorBackground(){
@@ -103,11 +114,8 @@ void moveCursorBackground(){
     Arguments: none
     Returns: void function
   */
-  // find the middle of the map
-  int yegMiddleX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
-  int yegMiddleY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
   // draw small patch of map over cursor trail
-  lcd_image_draw(&yegImage, &tft,yegMiddleX+(cursorX- CURSOR_SIZE/2),yegMiddleY+(cursorY- CURSOR_SIZE/2), 
+  lcd_image_draw(&yegImage, &tft,yegMapX+(cursorX- CURSOR_SIZE/2),yegMapY+(cursorY- CURSOR_SIZE/2), 
                 cursorX - CURSOR_SIZE/2, cursorY - CURSOR_SIZE/2,CURSOR_SIZE,CURSOR_SIZE);
 }
 
