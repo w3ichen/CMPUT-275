@@ -1,4 +1,4 @@
-#include "joy_cursor.cpp"
+
 void selectList(){
 	tft.fillScreen (0);
 	tft.setCursor(0, 0); //  where  the  characters  will be  displayed

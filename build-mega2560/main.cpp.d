@@ -20,4 +20,5 @@ build-mega2560/main.cpp.o: main.cpp \
  /home/cmput274/arduino-ua/libraries/SD/utility/Sd2PinMap.h \
  /home/cmput274/arduino-ua/libraries/SD/utility/SdInfo.h \
  /home/cmput274/arduino-ua/libraries/SD/utility/FatStructs.h \
- /home/cmput274/arduino-ua/libraries/SD/utility/SdFatUtil.h lcd_image.h
+ /home/cmput274/arduino-ua/libraries/SD/utility/SdFatUtil.h lcd_image.h \
+ /home/cmput274/arduino-ua/libraries/TouchScreen/TouchScreen.h

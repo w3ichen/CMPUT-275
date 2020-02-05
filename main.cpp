@@ -1,3 +1,13 @@
+
+#define REST_START_BLOCK 4000000    // address of the first restaurant data
+#define NUM_RESTAURANTS 1066        // total number of restaurants
+
+#define  MAP_WIDTH  2048
+#define  MAP_HEIGHT  2048
+#define  LAT_NORTH  5361858l
+#define  LAT_SOUTH  5340953l
+#define  LON_WEST  -11368652l
+#define  LON_EAST  -11333496l
 // Adding libraries
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
@@ -20,10 +30,41 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 #define JOY_DEADZONE 64
 #define CURSOR_SIZE 10
 
+#include <Adafruit_GFX.h>
+#include <TouchScreen.h>
+// touch screen pins, obtained from the documentaion
+#define YP A3 // must be an analog pin, use "An" notation!
+#define XM A2 // must be an analog pin, use "An" notation!
+#define YM 9  // can be a digital pin
+#define XP 8  // can be a digital pin
+// width/height of the display when rotated horizontally
+#define TFT_WIDTH  480
+#define TFT_HEIGHT 320
+// calibration data for the touch screen, obtained from documentation
+// the minimum/maximum possible readings from the touch point
+#define TS_MINX 100
+#define TS_MINY 110
+#define TS_MAXX 960
+#define TS_MAXY 910
+// thresholds to determine if there was a touch
+#define MINPRESSURE   10
+#define MAXPRESSURE 1000
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+
 // the cursor position on the display
 int cursorX, cursorY;
 int yegMapX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
 int yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
+
+Sd2Card card;
+
+struct restaurant { // 64 bytes
+  int32_t lat;
+  int32_t lon;
+  uint8_t rating;   // from 0 to 10
+  char name[55];
+};
+
 // forward declaration for redrawing the cursor
 void redrawCursor(uint16_t colour);
 
@@ -85,7 +126,7 @@ void redrawCursor(uint16_t colour) {
   cursorY = constrain(cursorY,CURSOR_SIZE/2,DISPLAY_HEIGHT-(CURSOR_SIZE/2));
   if (cursorX - initialX < 0){
     // too far to the right , scoll to the right
-    if (yegMapX > 0 && yegMapX < YEG_SIZE-DISPLAY_WIDTH-60){
+    if (yegMapX >= 0 && yegMapX < YEG_SIZE-DISPLAY_WIDTH-60){
       yegMapX += DISPLAY_WIDTH-60; 
       scrollMap();
     }
@@ -98,13 +139,13 @@ void redrawCursor(uint16_t colour) {
   }
   if (cursorY - initialY < 0){
     // too far to the bottom , scoll down
-    if (yegMapY > 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHT){
+    if (yegMapY >= 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHT){
       yegMapY += DISPLAY_HEIGHT; 
       scrollMap();
     }
   }else if (cursorY - initialY > 0){
     // too far to the top, scroll to the top
-    if (yegMapY > 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHTg){
+    if (yegMapY > 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHT){
       yegMapY -= DISPLAY_HEIGHT; 
       scrollMap();
   }
@@ -210,11 +251,46 @@ void processJoystick() {
   delay(20);
 }
 
+// Adding restaurant dots
+int32_t  x_to_lon(int16_t x) {
+  return  map(x, 0, MAP_WIDTH , LON_WEST , LON_EAST);
+}
+int32_t  y_to_lat(int16_t y) {
+  return  map(y, 0, MAP_HEIGHT , LAT_NORTH , LAT_SOUTH);
+}
+int16_t  lon_to_x(int32_t  lon) {
+  return  map(lon , LON_WEST , LON_EAST , 0, MAP_WIDTH);
+}
+int16_t  lat_to_y(int32_t  lat) {
+  return  map(lat , LAT_NORTH , LAT_SOUTH , 0, MAP_HEIGHT);
+}
+
+
+void restaurantDots(){
+
+  TSPoint touch = ts.getPoint();
+  if (touch.z > MINPRESSURE) {
+    // read in the restaurants
+    for (int i=0; i<NUM_RESTAURANTS;i++){
+      if(rest[i].lon > x_to_lon(yegMapX)  &&  rest[i].lat > y_to_lat(yegMapY)){
+        tft.fillCircle(
+          lon_to_x(rest[i].lon)-yegMapX,
+          lat_to_y(rest[i].lat)-yegMapY,
+          CURSOR_SIZE,tft.BLUE)
+      }
+   
+    }
+  }
+
+}
+
 int main() {
 	setup();
 
   while (true) {
     processJoystick();
+    restaurantDots();
+    delay(100);
   }
 
 	Serial.end();
