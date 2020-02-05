@@ -62,7 +62,6 @@ void setup() {
 }
 void scrollMap(){
   // constrain to inside the YEG map
-
   yegMapX = constrain(yegMapX,0,YEG_SIZE-DISPLAY_WIDTH-60);
   yegMapY = constrain(yegMapY,0,YEG_SIZE-DISPLAY_HEIGHT);
   // draw the map
@@ -86,21 +85,29 @@ void redrawCursor(uint16_t colour) {
   cursorY = constrain(cursorY,CURSOR_SIZE/2,DISPLAY_HEIGHT-(CURSOR_SIZE/2));
   if (cursorX - initialX < 0){
     // too far to the right , scoll to the right
-    yegMapX += DISPLAY_WIDTH-60; 
-    scrollMap();
+    if (yegMapX > 0 && yegMapX < YEG_SIZE-DISPLAY_WIDTH-60){
+      yegMapX += DISPLAY_WIDTH-60; 
+      scrollMap();
+    }
   }else if (cursorX - initialX > 0){
     // too far to the left, scroll to the left
-    yegMapX -= DISPLAY_WIDTH-60; 
-    scrollMap();
+    if (yegMapX > 0 && yegMapX < YEG_SIZE-DISPLAY_WIDTH-60){ 
+      yegMapX -= DISPLAY_WIDTH-60;
+      scrollMap();
+    }
   }
   if (cursorY - initialY < 0){
     // too far to the bottom , scoll down
-    yegMapY += DISPLAY_HEIGHT; 
-    scrollMap();
+    if (yegMapY > 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHT){
+      yegMapY += DISPLAY_HEIGHT; 
+      scrollMap();
+    }
   }else if (cursorY - initialY > 0){
     // too far to the top, scroll to the top
-    yegMapY -= DISPLAY_HEIGHT; 
-    scrollMap();
+    if (yegMapY > 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHTg){
+      yegMapY -= DISPLAY_HEIGHT; 
+      scrollMap();
+  }
   }
   // draw the new cursor
   tft.fillRect(cursorX - CURSOR_SIZE/2, cursorY - CURSOR_SIZE/2,
