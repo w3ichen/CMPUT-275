@@ -1,3 +1,11 @@
+// Adding libraries
+#include <Arduino.h>
+#include <Adafruit_GFX.h>
+#include <MCUFRIEND_kbv.h>
+#include <SPI.h>
+#include <SD.h>
+#include "lcd_image.h"
+MCUFRIEND_kbv tft;
 
 #define REST_START_BLOCK 4000000    // address of the first restaurant data
 #define NUM_RESTAURANTS 1066        // total number of restaurants
@@ -8,14 +16,7 @@
 #define  LAT_SOUTH  5340953l
 #define  LON_WEST  -11368652l
 #define  LON_EAST  -11333496l
-// Adding libraries
-#include <Arduino.h>
-#include <Adafruit_GFX.h>
-#include <MCUFRIEND_kbv.h>
-#include <SPI.h>
-#include <SD.h>
-#include "lcd_image.h"
-MCUFRIEND_kbv tft;
+
 // Define common variables
 #define SD_CS 10
 #define JOY_VERT  A9 // should connect A9 to pin VRx
@@ -58,11 +59,9 @@ int yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
 
 Sd2Card card;
 
-struct restaurant { // 64 bytes
+struct restaurant_lat_lon { // 64 bytes
   int32_t lat;
   int32_t lon;
-  uint8_t rating;   // from 0 to 10
-  char name[55];
 };
 
 // forward declaration for redrawing the cursor
@@ -72,6 +71,8 @@ void setup() {
   init();
   Serial.begin(9600);
 	pinMode(JOY_SEL, INPUT_PULLUP);
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT); 
 
 	//    tft.reset();             // hardware reset
   uint16_t ID = tft.readID();    // read ID from display
@@ -267,21 +268,31 @@ int16_t  lat_to_y(int32_t  lat) {
 
 
 void restaurantDots(){
+  pinMode(YP, INPUT); 
+  pinMode(XM, INPUT); 
 
   TSPoint touch = ts.getPoint();
   if (touch.z > MINPRESSURE) {
-    // read in the restaurants
-    for (int i=0; i<NUM_RESTAURANTS;i++){
-      if(rest[i].lon > x_to_lon(yegMapX)  &&  rest[i].lat > y_to_lat(yegMapY)){
-        tft.fillCircle(
-          lon_to_x(rest[i].lon)-yegMapX,
-          lat_to_y(rest[i].lat)-yegMapY,
-          CURSOR_SIZE,tft.BLUE)
-      }
-   
-    }
-  }
+    // if user touches the screen
+    restaurant_lat_lon rest;
 
+    for (int i=0; i<NUM_RESTAURANTS;i++){
+      getRestaurant(i, &rest);
+
+      if(rest.lon > x_to_lon(yegMapX)  &&  rest.lat > y_to_lat(yegMapY)){
+        // if restaurants is in the current map segment
+        pinMode(YP, OUTPUT); 
+        pinMode(XM, OUTPUT); 
+        tft.fillCircle(
+          lon_to_x(rest.lon)-yegMapX,
+          lat_to_y(rest.lat)-yegMapY,
+          CURSOR_SIZE,TFT_BLUE);
+      }
+    }
+    Serial.end();
+  }
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT); 
 }
 
 int main() {
@@ -290,7 +301,6 @@ int main() {
   while (true) {
     processJoystick();
     restaurantDots();
-    delay(100);
   }
 
 	Serial.end();
