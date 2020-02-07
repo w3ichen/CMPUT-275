@@ -1,3 +1,12 @@
+/*
+  Major Assignment #1 Part 1
+  Restaurant Finder
+  CMPUT 275 Winter 2020
+
+  Names: Gurbani Baweja, Weichen Qiu
+  ID: 1590254, 1578205
+*/
+
 // Adding libraries
 #include <Arduino.h>
 #include <Adafruit_GFX.h>
@@ -10,6 +19,7 @@ MCUFRIEND_kbv tft;
 #define REST_START_BLOCK 4000000    // address of the first restaurant data
 #define NUM_RESTAURANTS 1066        // total number of restaurants
 
+// constants for converting lat and lon functions
 #define  MAP_WIDTH  2048
 #define  MAP_HEIGHT  2048
 #define  LAT_NORTH  5361858l
@@ -25,12 +35,12 @@ MCUFRIEND_kbv tft;
 #define DISPLAY_WIDTH  480
 #define DISPLAY_HEIGHT 320
 #define YEG_SIZE 2048
-
 lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 #define JOY_CENTER   512
 #define JOY_DEADZONE 64
 #define CURSOR_SIZE 10
 
+// Add Touchscreen functions
 #include <Adafruit_GFX.h>
 #include <TouchScreen.h>
 // touch screen pins, obtained from the documentaion
@@ -50,26 +60,26 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 // thresholds to determine if there was a touch
 #define MINPRESSURE   10
 #define MAXPRESSURE 1000
+
 TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 
 // the cursor position on the display
 int cursorX, cursorY;
+// segment of the map displayed
 int yegMapX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
 int yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
 
 Sd2Card card;
 
-struct restaurant{ // 64 bytes
+struct restaurant{ // restaurant structure
   int32_t lat;
   int32_t lon;
   uint8_t rating;
   char name[55];
 };
-
 //The block number is made global to store the recent memory block number.
 restaurant restBlock[8];
 uint32_t num_memoryblock=0; 
-
 
 // forward declaration for redrawing the cursor
 void redrawCursor(uint16_t colour);
@@ -77,6 +87,7 @@ void redrawCursor(uint16_t colour);
 void setup() {
   init();
   Serial.begin(9600);
+  // declare pin modes
 	pinMode(JOY_SEL, INPUT_PULLUP);
   pinMode(YP, OUTPUT); 
   pinMode(XM, OUTPUT); 
@@ -119,10 +130,12 @@ void setup() {
   redrawCursor(TFT_RED);
 }
 
-
-// This function avoids re-reads to a block from the SD card.
 void getRestaurant(int restIndex, restaurant* restPtr) { 
-
+  /*
+    Gets the restaurant's name, location, and rating from the SD card
+    Arguments: index of restaurants and the restuarant structure as a pointer
+    Returns: the restuarant structure with all info
+  */
   uint32_t blockNum = REST_START_BLOCK + restIndex/8;
 
   // The memory block is read only if it hasn't been read previously.
@@ -137,6 +150,9 @@ void getRestaurant(int restIndex, restaurant* restPtr) {
 }
 
 void scrollMap(){
+  /* 
+    Scrolls the map if cursor hits edge of map
+  */
   // constrain to inside the YEG map
   yegMapX = constrain(yegMapX,0,YEG_SIZE-DISPLAY_WIDTH-60);
   yegMapY = constrain(yegMapY,0,YEG_SIZE-DISPLAY_HEIGHT);
@@ -152,13 +168,15 @@ void redrawCursor(uint16_t colour) {
   /*
     Redraws the red cursor and constrains the cursor
     Arguemnts: the color of the cursor
-    Returns: void
   */
+  // initial position of cursor before constrain
   int initialX = cursorX;
   int initialY = cursorY;
+
   // constrain cursor to edge of map
   cursorX = constrain(cursorX,CURSOR_SIZE/2, DISPLAY_WIDTH-60-(CURSOR_SIZE/2));
   cursorY = constrain(cursorY,CURSOR_SIZE/2,DISPLAY_HEIGHT-(CURSOR_SIZE/2));
+
   if (cursorX - initialX < 0){
     // too far to the right , scoll to the right
     if (yegMapX >= 0 && yegMapX < YEG_SIZE-DISPLAY_WIDTH-60){
@@ -183,7 +201,7 @@ void redrawCursor(uint16_t colour) {
     if (yegMapY > 0 && yegMapY <= YEG_SIZE-DISPLAY_HEIGHT){
       yegMapY -= DISPLAY_HEIGHT; 
       scrollMap();
-  }
+    }
   }
   // draw the new cursor
   tft.fillRect(cursorX - CURSOR_SIZE/2, cursorY - CURSOR_SIZE/2,
