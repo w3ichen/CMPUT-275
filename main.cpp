@@ -59,10 +59,17 @@ int yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
 
 Sd2Card card;
 
-struct restaurant_lat_lon { // 64 bytes
+struct restaurant{ // 64 bytes
   int32_t lat;
   int32_t lon;
+  uint8_t rating;
+  char name[55];
 };
+
+//The block number is made global to store the recent memory block number.
+restaurant restBlock[8];
+uint32_t num_memoryblock=0; 
+
 
 // forward declaration for redrawing the cursor
 void redrawCursor(uint16_t colour);
@@ -89,6 +96,15 @@ void setup() {
 	}
 	Serial.println("OK!");
 
+  Serial.print("Initializing SPI communication for raw reads...");
+  if (!card.init(SPI_HALF_SPEED, SD_CS)) {
+    Serial.println("failed! Is the card inserted properly?");
+    while (true) {}
+  }
+  else {
+    Serial.println("OK!");
+  }
+
 	tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
 
@@ -102,6 +118,24 @@ void setup() {
   // draw the first cursor
   redrawCursor(TFT_RED);
 }
+
+
+// This function avoids re-reads to a block from the SD card.
+void getRestaurant(int restIndex, restaurant* restPtr) {
+
+  uint32_t blockNum = REST_START_BLOCK + restIndex/8;
+
+  // The memory block is read only if it hasn't been read previously.
+  if (blockNum != num_memoryblock){
+    while(!card.readBlock(blockNum, (uint8_t*) restBlock)){
+      Serial.println("FAILED");
+    }
+  }
+
+  *restPtr = restBlock[restIndex % 8];
+  num_memoryblock = blockNum;
+}
+
 void scrollMap(){
   // constrain to inside the YEG map
   yegMapX = constrain(yegMapX,0,YEG_SIZE-DISPLAY_WIDTH-60);
@@ -274,23 +308,34 @@ void restaurantDots(){
   TSPoint touch = ts.getPoint();
   if (touch.z > MINPRESSURE) {
     // if user touches the screen
-    restaurant_lat_lon rest;
+    restaurant rest;
 
     for (int i=0; i<NUM_RESTAURANTS;i++){
       getRestaurant(i, &rest);
 
-      if(rest.lon > x_to_lon(yegMapX)  &&  rest.lat > y_to_lat(yegMapY)){
+
+      Serial.print("YEGX ");Serial.println(yegMapX);
+      Serial.print("YEGY ");Serial.println(yegMapY);
+      Serial.print("conver to  x"); Serial.println(x_to_lon(yegMapX));
+      Serial.print("conver tot y:");Serial.println(y_to_lat(yegMapY));
+      
+      if(lon_to_x(rest.lon) > yegMapX  &&  y_to_lat(rest.lat) > yegMapY){
         // if restaurants is in the current map segment
         pinMode(YP, OUTPUT); 
         pinMode(XM, OUTPUT); 
         tft.fillCircle(
           lon_to_x(rest.lon)-yegMapX,
           lat_to_y(rest.lat)-yegMapY,
-          CURSOR_SIZE,TFT_BLUE);
+          CURSOR_SIZE/2,TFT_BLUE);
       }
+      Serial.print("lon to x");Serial.println(lon_to_x(rest.lon));
+      Serial.print("lat to y");Serial.println(lat_to_y(rest.lat));
+      Serial.print("circle x");Serial.println(lon_to_x(rest.lon)-yegMapX);
+      Serial.print("circle y");Serial.println(lat_to_y(rest.lat)-yegMapY);
     }
     Serial.end();
   }
+  
   pinMode(YP, OUTPUT); 
   pinMode(XM, OUTPUT); 
 }
