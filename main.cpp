@@ -121,7 +121,7 @@ void setup() {
 
 
 // This function avoids re-reads to a block from the SD card.
-void getRestaurant(int restIndex, restaurant* restPtr) {
+void getRestaurant(int restIndex, restaurant* restPtr) { 
 
   uint32_t blockNum = REST_START_BLOCK + restIndex/8;
 
@@ -251,12 +251,17 @@ void processJoystick() {
     Returns:none
   */
   // Read in joystick 
+  pinMode(YP, INPUT); 
+  pinMode(XM, INPUT);
   int xVal = analogRead(JOY_HORIZ);
   int yVal = analogRead(JOY_VERT);
   int buttonVal = digitalRead(JOY_SEL);
   // call speed functions get get speed
   int horizontal_speed = x_speed(xVal);
   int vertical_speed = y_speed(yVal);
+
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT);
 
   if (yVal < JOY_CENTER - JOY_DEADZONE) {
     // call movecursorbackground to move up trail with map
@@ -312,15 +317,13 @@ void restaurantDots(){
 
     for (int i=0; i<NUM_RESTAURANTS;i++){
       getRestaurant(i, &rest);
-
-
-      Serial.print("YEGX ");Serial.println(yegMapX);
-      Serial.print("YEGY ");Serial.println(yegMapY);
-      Serial.print("conver to  x"); Serial.println(x_to_lon(yegMapX));
-      Serial.print("conver tot y:");Serial.println(y_to_lat(yegMapY));
       
-      if(lon_to_x(rest.lon) > yegMapX  &&  y_to_lat(rest.lat) > yegMapY){
+      if((lon_to_x(rest.lon)-yegMapX)>0 &&
+        (lat_to_y(rest.lat)-yegMapY)>0  &&
+        (lon_to_x(rest.lon)-yegMapX)<DISPLAY_WIDTH-60 &&
+        (lat_to_y(rest.lat)-yegMapY)<DISPLAY_HEIGHT  ){
         // if restaurants is in the current map segment
+
         pinMode(YP, OUTPUT); 
         pinMode(XM, OUTPUT); 
         tft.fillCircle(
@@ -328,16 +331,10 @@ void restaurantDots(){
           lat_to_y(rest.lat)-yegMapY,
           CURSOR_SIZE/2,TFT_BLUE);
       }
-      Serial.print("lon to x");Serial.println(lon_to_x(rest.lon));
-      Serial.print("lat to y");Serial.println(lat_to_y(rest.lat));
-      Serial.print("circle x");Serial.println(lon_to_x(rest.lon)-yegMapX);
-      Serial.print("circle y");Serial.println(lat_to_y(rest.lat)-yegMapY);
+
     }
-    Serial.end();
   }
-  
-  pinMode(YP, OUTPUT); 
-  pinMode(XM, OUTPUT); 
+ 
 }
 
 int main() {
@@ -346,6 +343,7 @@ int main() {
   while (true) {
     processJoystick();
     restaurantDots();
+
   }
 
 	Serial.end();
