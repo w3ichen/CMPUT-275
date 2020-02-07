@@ -1,0 +1,37 @@
+Major Assignment #1 Part 1
+Restaurant Finder
+CMPUT 275 Winter 2020
+
+Names: Gurbani Baweja, Weichen Qiu
+ID: 1590254, 1578205
+
+
+Included Files:
+- a1part1.cpp
+- README
+- Makefile
+- lcd_image.cpp
+- lcd_image.h
+
+
+Running Instructions:
+	1. Upload the program to the arduino with make upload
+	2. Push the joystick in any direction to move the cursor
+	3. Tap the touch display to show nearby restaurants as dots
+	4. Press down the joystick to list all nearby restaurants in order of distance
+		, select a restaurant from the list by pressing the joystick to show the restaurant
+
+Accessories: arduino, touchscreen display, breadbaord, joy stick, male to male wires, male to female wires, computer
+
+Wiring instructions:
+	1. Insert bent wires into A8 and A9
+	2. Align the pins of the touchscreen to the pins on the arduino and push all the way in
+	3. Connect a wire from the 5V at end of arduino to (+) bus of breadbaord. Connect a wire from the 		GND at the end of the arduino to the (-) bus of the breadboard
+	4. Connect the female to male wires onto the joystick and insert into breadboard
+	5. Connect the 5V and GND wires of the joystick to the (+) and (-) bus of breadboard respectively
+	6. Connect VRy of joystick to A8 of arduino and VRx to A9
+	7. Connnect SW of joystick to pin 53
+
+
+Notes and Assumptions:
+	n/a
