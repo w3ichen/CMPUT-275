@@ -167,7 +167,7 @@ void redrawCursor(uint16_t colour) {
     }
   }else if (cursorX - initialX > 0){
     // too far to the left, scroll to the left
-    if (yegMapX > 0 && yegMapX < YEG_SIZE-DISPLAY_WIDTH-60){ 
+    if (yegMapX > 0 && yegMapX <= YEG_SIZE-DISPLAY_WIDTH-60){ 
       yegMapX -= DISPLAY_WIDTH-60;
       scrollMap();
     }
@@ -180,7 +180,7 @@ void redrawCursor(uint16_t colour) {
     }
   }else if (cursorY - initialY > 0){
     // too far to the top, scroll to the top
-    if (yegMapY > 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHT){
+    if (yegMapY > 0 && yegMapY <= YEG_SIZE-DISPLAY_HEIGHT){
       yegMapY -= DISPLAY_HEIGHT; 
       scrollMap();
   }
