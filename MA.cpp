@@ -61,19 +61,18 @@ lcd_image_t yegImage = { "yeg-big.lcd", YEG_SIZE, YEG_SIZE };
 #define MINPRESSURE   10
 #define MAXPRESSURE 1000
 
-TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
+TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300); // intialize touchscreen
 
 // the cursor position on the display
-int cursorX, cursorY;
+int32_t cursorX, cursorY;
 // segment of the map displayed
-int yegMapX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
-int yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
+int32_t yegMapY = YEG_SIZE/2 - DISPLAY_HEIGHT/2;
+int32_t yegMapX = YEG_SIZE/2 - (DISPLAY_WIDTH - 60)/2;
 
 Sd2Card card;
 
 // forward declaration for redrawing the cursor
 void redrawCursor(uint16_t colour);
-
 
 void setup() {
   init();
@@ -110,6 +109,14 @@ void setup() {
   tft.setRotation(1);
   tft.fillScreen(TFT_BLACK);
 
+  Serial.println("printing in setup");
+    Serial.print("yegX: ");Serial.println(yegMapX);
+  Serial.print("yegY: ");Serial.println(yegMapY);
+  Serial.print("cursorX: ");Serial.println(cursorX);
+  Serial.print("cursorY: ");Serial.println(cursorY);
+
+
+
   // draws the centre of the Edmonton map, leaving the rightmost 60 columns black
   lcd_image_draw(&yegImage, &tft, yegMapX, yegMapY,
                  0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
@@ -127,17 +134,17 @@ struct restaurant{ // restaurant structure
   uint8_t rating;
   char name[55];
 };
-//The block number is made global to store the recent memory block number.
 
-struct Restuarant_Dist{
+struct Restuarant_Dist{ // structure for sorting distance
   uint16_t index;
   uint16_t dist;
 }rest_distance[NUM_RESTAURANTS];
 
-
+//The block number is made global to store the recent memory block number.
 restaurant restBlock[8];
 uint32_t num_memoryblock=0; 
 
+// conversion functions from lat/lon to map coord ad vice versa
 int32_t  x_to_lon(int16_t x) {
   return  map(x, 0, MAP_WIDTH , LON_WEST , LON_EAST);
 }
@@ -150,9 +157,6 @@ int16_t  lon_to_x(int32_t  lon) {
 int16_t  lat_to_y(int32_t  lat) {
   return  map(lat , LAT_NORTH , LAT_SOUTH , 0, MAP_HEIGHT);
 }
-
-
-
 
 void getRestaurant(int restIndex, restaurant* rest_distance) { 
   /*
@@ -173,37 +177,58 @@ void getRestaurant(int restIndex, restaurant* rest_distance) {
 
   *rest_distance = restBlock[restIndex % 8];
   num_memoryblock = blockNum;
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT); 
 }
-void refresh_list(int16_t Rest_selected){
+
+void refresh_list(int16_t Rest_selected, bool up_or_down){
+  /*
+    Moves the selection bar up and down the list
+    Arguments: index of selected restaurant, boolean of direction
+  */
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT); 
   tft.setCursor(0, 0);
   tft.setTextWrap(false);
   tft.setTextSize(2);
 
-  for (int i=0; i<Rest_selected-1;i++){
-    tft.print("\n");
-  }
-  int k=-1;
-  for (int j=0;j<3;j++){
+  if (up_or_down == true){
+    // going up
+    for (int i=0;i<Rest_selected;i++){ tft.print("\n");}
+    // selected is on top
+    // call the restaurant name from sd card
     restaurant r;
-    getRestaurant(rest_distance[Rest_selected +k].index, &r);
-    pinMode(YP, OUTPUT); 
-    pinMode(XM, OUTPUT); 
-    if (k!= 0){
-      tft.setTextColor(0xFFFF, 0x0000);  
-    }
-    else{
-      tft.setTextColor(0x0000, 0xFFFF);
-    }
+    getRestaurant(rest_distance[Rest_selected].index, &r);
+    // overwrite the old text
+    tft.setTextColor(0x0000, 0xFFFF);
     tft.print(r.name);
-      tft.print("\n"); 
-
-    k++;
+    tft.print("\n"); 
+    // deselect the one under it
+    getRestaurant(rest_distance[Rest_selected+1].index, &r);
+    tft.setTextColor(0xFFFF, 0x0000); 
+    tft.print(r.name);
+  }else{
+    // going down
+    for (int i=0;i<Rest_selected-1;i++){ tft.print("\n");}
+    restaurant r;
+    getRestaurant(rest_distance[Rest_selected-1].index, &r);
+    tft.setTextColor(0xFFFF, 0x0000);
+    tft.print(r.name);
+    tft.print("\n"); 
+    // deselect the one under it
+    getRestaurant(rest_distance[Rest_selected].index, &r);
+    tft.setTextColor(0x0000, 0xFFFF); 
+    tft.print(r.name);
   }
-
-  
+  delay(100);
 }
 
 void disp_restaurants(Restuarant_Dist* rest_distance){
+  /*
+    writes out all the restaurants in the list on button press
+    by reading from the sorted rest_distance array
+    Arguments: rest_distance array
+  */
   pinMode(YP, OUTPUT); 
   pinMode(XM, OUTPUT); 
 
@@ -214,8 +239,8 @@ void disp_restaurants(Restuarant_Dist* rest_distance){
   
   int16_t Rest_selected = 0;
   for(int16_t k = 0; k<21; k++){
+    // read from sd card the first 21 restaurants
     restaurant r;
-
     getRestaurant(rest_distance[k].index, &r);
     pinMode(YP, OUTPUT); 
     pinMode(XM, OUTPUT); 
@@ -225,124 +250,119 @@ void disp_restaurants(Restuarant_Dist* rest_distance){
     else{
       tft.setTextColor(0x0000, 0xFFFF);
     }
-
-    
     tft.print(r.name);
     tft.print("\n");
   }
-  
 
   tft.print("\n");
   int16_t select_bar =0;
-  while(true){
-      pinMode(YP, INPUT); 
-      pinMode(XM, INPUT); 
-      int yVal = analogRead(JOY_VERT);
 
-    
+  // keep looping until yser selects a restaurant
+  while(true){
+    int yVal = analogRead(JOY_VERT);
     if(Rest_selected != 0 && yVal < JOY_CENTER - JOY_DEADZONE){
+      // user selected up
        tft.setTextColor(0xFFFF, 0x0000); 
        Rest_selected--;
-       refresh_list(Rest_selected);
-       
-       
-
-    }
-   
-  if( yVal > JOY_CENTER + JOY_DEADZONE ){
-    tft.setTextColor(0x0000, 0xFFFF);
-    Rest_selected++;
-    refresh_list(Rest_selected);
-    
-    
-  }
-
-
-    pinMode(YP, INPUT); 
-    pinMode(XM, INPUT); 
-   if(digitalRead(JOY_SEL)==LOW){ 
-    int16_t x = 0, y = 0;
-    restaurant selected;
-    getRestaurant(rest_distance[Rest_selected].index, &selected);
-    x = lon_to_x(selected.lon) - ((DISPLAY_WIDTH-60)/2);
-    y = lat_to_y(selected.lat) - ((DISPLAY_HEIGHT)/2);
-    
-    if (x<0){
-      x = constrain(x,0, YEG_SIZE - DISPLAY_WIDTH-60);
-
+       refresh_list(Rest_selected, true);
+      }
+    if(Rest_selected != 19 && yVal > JOY_CENTER + JOY_DEADZONE ){
+      // user selected down
+      tft.setTextColor(0x0000, 0xFFFF);
+      Rest_selected++;
+      refresh_list(Rest_selected,false);
     }
 
-    if (y<0){
-      y = constrain(y,0, YEG_SIZE-DISPLAY_HEIGHT);
+    if(digitalRead(JOY_SEL)==LOW){ 
+      // when the user selects a restuarant
+      restaurant selected;
+      int16_t rest_x, rest_y;
+      getRestaurant(rest_distance[Rest_selected].index, &selected);
 
+      rest_x = lon_to_x(selected.lon);
+      rest_y = lat_to_y(selected.lat);
+      if ((rest_x + (DISPLAY_WIDTH-60)/2) > YEG_SIZE) {
+        yegMapX = YEG_SIZE - (DISPLAY_WIDTH-60);
+        cursorX = rest_x - yegMapX- CURSOR_SIZE ;
+      }
+      else if ((rest_y + DISPLAY_HEIGHT / 2) > YEG_SIZE) {
+        yegMapY = YEG_SIZE - DISPLAY_HEIGHT;
+        cursorY = rest_y - yegMapY - CURSOR_SIZE;
+      }
+      else if (rest_x < (DISPLAY_WIDTH-60)/2) {
+        yegMapX = 0;
+        cursorX = rest_x - CURSOR_SIZE;
+      } 
+      else if (rest_y < DISPLAY_HEIGHT/2) {
+        yegMapY = 0;
+        cursorY = rest_y - CURSOR_SIZE;
+      }
+      else{
+          yegMapX = rest_x - (DISPLAY_WIDTH-60)/2;
+          yegMapY = rest_y - DISPLAY_HEIGHT / 2;
+          cursorX = (DISPLAY_WIDTH-60)/2;
+          cursorY = DISPLAY_HEIGHT / 2;
+      }
+      tft.fillScreen(TFT_BLACK);
+
+
+      lcd_image_draw(&yegImage, &tft, yegMapX, yegMapY, 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+      redrawCursor(TFT_RED);
+      break;
     }
-    yegMapX = x;
-    yegMapY = y;
-    pinMode(YP, OUTPUT); 
-    pinMode(XM, OUTPUT); 
-    tft.fillScreen(TFT_BLACK);
-    lcd_image_draw(&yegImage, &tft, x , y ,
-                 0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
-    redrawCursor(TFT_RED);
-    break;
-
-
   }
-  }
-  
-
-
-
-  
 }
 
-
-
 void swap(Restuarant_Dist &val1,Restuarant_Dist &val2){
-  //Serial.println(val1.dist);
-        //Serial.println(val2.dist); 
+  /* 
+    swaps restaurant in array. used for sorting
+    Arguments: the two values, val1 and val2 to swap
+  */
   Restuarant_Dist emptyval;
   emptyval = val1;
   val1 = val2;
-  val2 = emptyval ;
-        //Serial.println(val1.dist);
-        //Serial.println(val2.dist);  
-
+  val2 = emptyval ; 
 }
 
 void isort(Restuarant_Dist* restD, uint16_t length){
-  int32_t time = millis();
+  /* 
+    insertion sort to sort items in array by distance
+    Arguments: the array restD, and length
+  */
   int16_t i = 1; 
-  while(i<1066){ 
+  while(i<length){ 
     int16_t j = i;
     while((j>0) && (restD[j-1].dist > restD[j].dist)){
           swap(restD[j],restD[j-1]);
           j--;
     }
-
     i = i + 1;
   }
   disp_restaurants(restD);
 }
 
 void nearest21_restaurants(Restuarant_Dist* rest_distance){
-  restaurant rest;
-  pinMode(YP, INPUT); 
-  pinMode(XM, INPUT); 
+  /*
+    main function that is called to display and sort the closest 21
+    restaurants, makes calls to isort, getrestaurant
+    Arguments: rest_distance array
+  */
+  restaurant rest; 
   int buttonVal = digitalRead(JOY_SEL);
-  pinMode(YP, OUTPUT); 
-  pinMode(XM, OUTPUT); 
+ 
   if(buttonVal == LOW){
-    for(int16_t i = 0 ; i <(NUM_RESTAURANTS-1) ;i++){
+
+    for(int16_t i = 0 ; i <(NUM_RESTAURANTS) ;i++){
+      // reads in all the restaurants to rest_distance
       getRestaurant(i,&rest);
       rest_distance[i].index = i;
-      rest_distance[i].dist = (abs((int)lon_to_x(rest.lon) - 
-      						  (int)yegMapX - (int)cursorX)) + 
-      						  (abs((int)lat_to_y(rest.lat) - 
-      						  (int)yegMapY - (int)cursorY));
+      rest_distance[i].dist = (abs((int32_t)lon_to_x(rest.lon) - 
+                						  (int32_t)yegMapX - (int32_t)cursorX)) + 
+                						  (abs((int32_t)lat_to_y(rest.lat) - 
+                						  (int32_t)yegMapY - (int32_t)cursorY));
     }
-    //Serial.println("after loop");
-      isort(rest_distance,NUM_RESTAURANTS);  
+    // sorts all the restaurants by distance
+    isort(rest_distance,NUM_RESTAURANTS);  
   }
 }
 
@@ -352,12 +372,21 @@ void scrollMap(){
   */
   pinMode(YP, OUTPUT); 
   pinMode(XM, OUTPUT); 
+  Serial.println("--------------------------------------");
+  Serial.println("printing in scroll map");
+  Serial.print("yegX: ");Serial.println(yegMapX);
+  Serial.print("yegY: ");Serial.println(yegMapY);
+  Serial.print("cursorX: ");Serial.println(cursorX);
+  Serial.print("cursorY: ");Serial.println(cursorY);
+
+
   // constrain to inside the YEG map
   yegMapX = constrain(yegMapX,0,YEG_SIZE-DISPLAY_WIDTH-60);
   yegMapY = constrain(yegMapY,0,YEG_SIZE-DISPLAY_HEIGHT);
   // draw the map
   lcd_image_draw(&yegImage, &tft, yegMapX, yegMapY,
                  0, 0, DISPLAY_WIDTH - 60, DISPLAY_HEIGHT);
+  delay(50);
   // reset cursor to middle
   cursorX = (DISPLAY_WIDTH - 60)/2;
   cursorY = DISPLAY_HEIGHT/2;
@@ -389,7 +418,7 @@ void redrawCursor(uint16_t colour) {
       scrollMap();
     }
   }
-  if (cursorY - initialY < 0){
+  else if (cursorY - initialY < 0){
     // too far to the bottom , scoll down
     if (yegMapY >= 0 && yegMapY < YEG_SIZE-DISPLAY_HEIGHT){
       yegMapY += DISPLAY_HEIGHT; 
@@ -402,6 +431,8 @@ void redrawCursor(uint16_t colour) {
       scrollMap();
     }
   }
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT);
   // draw the new cursor
   tft.fillRect(cursorX - CURSOR_SIZE/2, cursorY - CURSOR_SIZE/2,
                CURSOR_SIZE, CURSOR_SIZE, colour);
@@ -470,8 +501,7 @@ void processJoystick() {
     Returns:none
   */
   // Read in joystick 
-  pinMode(YP, INPUT); 
-  pinMode(XM, INPUT);
+
   int xVal = analogRead(JOY_HORIZ);
   int yVal = analogRead(JOY_VERT);
   int buttonVal = digitalRead(JOY_SEL);
@@ -536,12 +566,10 @@ void restaurantDots(){
         tft.fillCircle(
           lon_to_x(rest.lon)-yegMapX,
           lat_to_y(rest.lat)-yegMapY,
-          CURSOR_SIZE/2,TFT_BLUE);
+          CURSOR_SIZE/3,TFT_BLUE);
       }
-
     }
   }
- 
 }
 
 int main() {
