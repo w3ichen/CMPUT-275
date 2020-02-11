@@ -1,0 +1,46 @@
+
+-----------------------------------------------------------------------------------------------------
+
+Name: Chanpreet Singh and Kaiwen Tang
+ID : 1576137 and 1575518
+CMPUT 275 - Tangible Compting - Winter 2019
+Major Assignment 1: Restaurant Finder Part 1
+
+------------------------------------------------------------------------------------------------------
+=> Included File:
+---------------
+
+ 1) a1part1.py
+ 2) README
+ 3) Makefile
+ 4) lcd_image.cpp
+ 5) lcd_image.h
+
+-------------------------------------------------------------------------------------------------------
+=> User Instructions:
+------------------
+
+=> Wiring  instructions:
+----------------------------
+
+==> tft display shield
+- Slide right into the Arduino. The micro SD card slot must be on the same side as the Arduino's power plug. 
+
+=> Running  Instructions:
+---------------------------
+1.  Connect  the  Arduino  to the PC using an A-B style  USB  cable. Ensure that  the  Arduino  is using  the  proper  serial  port (/dev/ttyACM0  or -ACM1).
+2. In the  directory  containing  the  files mentioned in included file section, use command 'make  upload" to  upload  the  code to the  Arduino.
+
+-------------------------------------------------------------------------------------------------------
+=> Program:
+-----------
+
+Part 1:
+
+We control the flow of the program using enum function and it help program to know at which step it is at.We start with the setup by displaying a sectin of the edmonton map and seting pointer at the center. We initially call process joystick since program starts in mode 0 and we see to it that map section displayed changes as cursor hit the boundary. If user touch anywhere on the screen then all maps within the current displayed section of edmontons map are displayed with blue dots on the map. If user reach all the way at the end of edmontons map then map refreshing changes. 
+
+If joystick button is pressed then we initiate mode 1 and display 21 restaurants nearest to the current cursor by calculating the manhatten distance and sorting distance using insertion sort. Once list of restaurants is displayed then user can scroll up and down to select a resturant that he want to see on the map. After user select a restaurant by pressing the joy stick button, edmonton map appears and cursor is plased on the selected restaurant. Now user can either touch screen and see all restaurants on current section of map or go back to mode 1 and select another restaurant.
+
+Disclaimer: This assignment use portions of the code already graded in CMPUT 275 eg. getRestaurantFast().
+
+Thank you.
