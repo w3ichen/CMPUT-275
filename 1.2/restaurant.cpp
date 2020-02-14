@@ -31,6 +31,7 @@ void swap(RestDist& r1, RestDist& r2) {
 
 // Insertion sort to sort the restaurants.
 void insertionSort(RestDist restaurants[]) {
+	int start_time = millis();
 	// Invariant: at the start of iteration i, the
 	// array restaurants[0 .. i-1] is sorted.
 	for (int i = 1; i < NUM_RESTAURANTS; ++i) {
@@ -40,7 +41,20 @@ void insertionSort(RestDist restaurants[]) {
 			swap(restaurants[j-1], restaurants[j]);
 		}
 	}
+	cout << "isort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
+
 }
+void quickSort(RestDist restaurants[]){
+	int start_time = millis();
+
+
+	cout << "qsort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
+
+}
+
+
+
+
 
 // Computes the manhattan distance between two points (x1, y1) and (x2, y2).
 int16_t manhattan(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
