@@ -82,6 +82,10 @@ lcd_image_t edmontonBig = { "yeg-big.lcd", MAPWIDTH, MAPHEIGHT };
 // The cache of 8 restaurants for the getRestaurant function.
 RestCache cache;
 
+// button are global
+char sort_type[] = "QSORT";
+int rating = 1;
+
 // ************ END GLOBAL VARIABLES ***************
 
 // Forward declaration of functions to begin the modes. Setup uses one, so
@@ -139,6 +143,54 @@ void setup() {
   beginMode0();
 }
 
+void sideBar(){
+	pinMode(YP, INPUT);
+    pinMode(XM, INPUT);
+    TSPoint touch = ts.getPoint();
+	// if the user presses the menu
+    if (touch.z >= MINPRESSURE && touch.z <= MAXPRESSURE) {
+	  pinMode(YP, OUTPUT);
+	  pinMode(XM, OUTPUT);
+	  tft.setTextColor(TFT_WHITE);
+	  tft.setTextSize(2);
+      // get he points
+      int ptx = map(touch.y, TS_MINX, TS_MAXX, 0, DISPLAY_WIDTH);
+      int pty = map(touch.x, TS_MINY, TS_MAXY, 0, DISPLAY_HEIGHT);
+      if (ptx < 60 && pty > 320/2){
+
+		tft.setCursor(DISP_WIDTH,TFT_WIDTH/4);
+		tft.print(rating);
+
+		Serial.print("rating pressed: "); Serial.println(rating);
+
+      }else if (ptx < 60 && pty < 320/2){
+      	pinMode(YP, OUTPUT);
+	  	pinMode(XM, OUTPUT);
+	  	tft.setTextColor(TFT_WHITE);
+	  	tft.setTextSize(2);
+        // sort button
+
+		int16_t y_position = 160 + DISP_HEIGHT/8;
+		for (int i=0; i < strlen(sort_type);i++){
+			tft.setCursor(DISP_WIDTH,y_position);
+			y_position += 20;
+			tft.print(sort_type[i]);
+		}
+
+		Serial.println("sort pressed: ");
+        
+      }
+      delay(2);
+    }
+
+}
+
+
+
+
+
+
+
 // Draw the map patch of edmonton over the preView position, then
 // draw the red cursor at the curView position.
 void moveCursor() {
@@ -168,6 +220,11 @@ void beginMode0() {
 	moveCursor();
 
   displayMode = MAP;
+
+  // buttons
+  tft.drawRect(DISP_WIDTH,0,60,320/2,TFT_RED);
+  tft.drawRect(DISP_WIDTH,320/2,60,320/2,TFT_RED);
+
 }
 
 // Print the i'th restaurant in the sorted list.
