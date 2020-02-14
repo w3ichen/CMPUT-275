@@ -83,7 +83,7 @@ lcd_image_t edmontonBig = { "yeg-big.lcd", MAPWIDTH, MAPHEIGHT };
 RestCache cache;
 
 // button are global
-char sort_type[] = "QSORT";
+int sort_mode = 0;
 int rating = 1;
 
 // ************ END GLOBAL VARIABLES ***************
@@ -117,6 +117,7 @@ void setup() {
     Serial.println("Is the card inserted properly?");
     while (true) {}
   }
+  Serial.println("OK!");
 
 	// Also initialize the SD card for raw reads.
   Serial.print("Initializing SPI communication for raw reads...");
@@ -143,46 +144,54 @@ void setup() {
   beginMode0();
 }
 
-void sideBar(){
-	pinMode(YP, INPUT);
-    pinMode(XM, INPUT);
-    TSPoint touch = ts.getPoint();
-	// if the user presses the menu
-    if (touch.z >= MINPRESSURE && touch.z <= MAXPRESSURE) {
-	  pinMode(YP, OUTPUT);
-	  pinMode(XM, OUTPUT);
-	  tft.setTextColor(TFT_WHITE);
-	  tft.setTextSize(2);
-      // get he points
-      int ptx = map(touch.y, TS_MINX, TS_MAXX, 0, DISPLAY_WIDTH);
-      int pty = map(touch.x, TS_MINY, TS_MAXY, 0, DISPLAY_HEIGHT);
-      if (ptx < 60 && pty > 320/2){
+void sideBar(int pty){
+  tft.setTextColor(0x0000, 0xFFFF);
+  tft.setTextSize(2);
+  // get he points
+  if (pty > 160){
+  	rating ++ ;
+  	if (rating == 6){ rating = 1; } // rating loops back to 1 if is 6
 
-		tft.setCursor(DISP_WIDTH,TFT_WIDTH/4);
+
+  	tft.setCursor(DISP_WIDTH+25,DISP_HEIGHT/4);
 		tft.print(rating);
 
-		Serial.print("rating pressed: "); Serial.println(rating);
+  }else{
+    // sort button
+  	char sort_modes_array[3][5] = {"QSORT","ISORT","BOTH "};
+  	sort_mode = (sort_mode+1)%3;
+  	int16_t y_position = 160 + DISP_HEIGHT/8;
 
-      }else if (ptx < 60 && pty < 320/2){
-      	pinMode(YP, OUTPUT);
-	  	pinMode(XM, OUTPUT);
-	  	tft.setTextColor(TFT_WHITE);
-	  	tft.setTextSize(2);
-        // sort button
+    for (int i=0; i < 5;i++){
 
-		int16_t y_position = 160 + DISP_HEIGHT/8;
-		for (int i=0; i < strlen(sort_type);i++){
-			tft.setCursor(DISP_WIDTH,y_position);
-			y_position += 20;
-			tft.print(sort_type[i]);
-		}
+	   tft.setCursor(DISP_WIDTH+25,y_position);
+	   y_position += 20;
+	   tft.print(sort_modes_array[sort_mode][i]);
+    }Serial.println(" ");
+    
+  }
+  delay(100);
+    
 
-		Serial.println("sort pressed: ");
-        
-      }
-      delay(2);
-    }
-
+}
+void drawSidebar(){
+  char sort_modes_array[3][5] = {"QSORT","ISORT","BOTH"};
+  tft.setTextColor(TFT_BLACK);
+  tft.setTextSize(2);
+  // buttons
+  tft.fillRect(DISP_WIDTH, 0,60, DISP_HEIGHT,TFT_WHITE); //background
+  tft.drawRect(DISP_WIDTH,0,60,320/2,TFT_RED); // border 1
+  tft.drawRect(DISP_WIDTH,320/2,60,320/2,TFT_BLUE); // border 2
+  //rating
+  tft.setCursor(DISP_WIDTH+25,DISP_HEIGHT/4);
+  tft.print(rating);
+  //sort type
+  int16_t y_position = 160 + DISP_HEIGHT/8;
+  for (int i=0; i < 5;i++){
+	tft.setCursor(DISP_WIDTH+25,y_position);
+	y_position += 20;
+	tft.print(sort_modes_array[sort_mode][i]);
+  }
 }
 
 
@@ -221,9 +230,7 @@ void beginMode0() {
 
   displayMode = MAP;
 
-  // buttons
-  tft.drawRect(DISP_WIDTH,0,60,320/2,TFT_RED);
-  tft.drawRect(DISP_WIDTH,320/2,60,320/2,TFT_RED);
+  drawSidebar();
 
 }
 
@@ -364,10 +371,13 @@ void scrollingMap() {
 
 	// Necessary to resume TFT display functions
 	pinMode(YP, OUTPUT);
-  pinMode(XM, OUTPUT);
+  	pinMode(XM, OUTPUT);
+
+	int ptx = map(touch.y, TS_MINX, TS_MAXX, 0, TFT_WIDTH);
+    int pty = map(touch.x, TS_MINY, TS_MAXY, 0, TFT_HEIGHT);
 
 	// If there was an actual touch, draw the dots
-	if (touch.z >= MINPRESSURE && touch.z <= MAXPRESSURE) {
+	if (touch.z >= MINPRESSURE && touch.z <= MAXPRESSURE && ptx > 60) {
 		restaurant r;
 
 		// just iterate through all restaurants on the card
@@ -381,6 +391,12 @@ void scrollingMap() {
 			}
 		}
 	}
+	if (touch.z >= MINPRESSURE && touch.z <= MAXPRESSURE && ptx < 60) {
+		// if buttons are pressed
+		sideBar(pty);
+	}
+
+
 }
 
 // Process joystick movement when in mode 1.
