@@ -144,6 +144,7 @@ void setup() {
   beginMode0();
 }
 
+
 int ratingConversion( int rating_out_of_ten ){
   // converts rating from 10 scale to 5 scale
   return max( ( rating_out_of_ten + 1 ) /2 , 1);
@@ -172,7 +173,7 @@ void sideBar(int pty){
 	   tft.setCursor(DISP_WIDTH+25,y_position);
 	   y_position += 20;
 	   tft.print(sort_modes_array[sort_mode][i]);
-    }Serial.println(" ");
+    }
     
   }
   delay(100);
@@ -266,7 +267,7 @@ void beginMode1() {
 	tft.setTextSize(2);
 
 	// Get the RestDist information for this cursor position and sort it.
-	getAndSortRestaurants(curView, restaurants, &card, &cache);
+	getAndSortRestaurants(curView, restaurants, &card, &cache, sort_mode, rating);
 
 	// Initially have the closest restaurant highlighted.
 	selectedRest = 0;
@@ -363,8 +364,6 @@ void scrollingMap() {
   if(invSelect == LOW){
 		beginMode1();
     displayMode = MENU;
-    Serial.println(displayMode);
-    Serial.println("MODE changed.");
 
 		// Just to make sure the restaurant is not selected by accident
 		// because the button was pressed too long.

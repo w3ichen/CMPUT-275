@@ -1,5 +1,4 @@
 #include "restaurant.h"
-
 /*
 	Sets *ptr to the i'th restaurant. If this restaurant is already in the cache,
 	it just copies it directly from the cache to *ptr. Otherwise, it fetches
@@ -30,19 +29,16 @@ void swap(RestDist& r1, RestDist& r2) {
 }
 
 // Insertion sort to sort the restaurants.
-void insertionSort(RestDist restaurants[]) {
-	int start_time = millis();
+void insertionSort(RestDist restaurants[], int rated_restaurants_num) {
 	// Invariant: at the start of iteration i, the
 	// array restaurants[0 .. i-1] is sorted.
-	for (int i = 1; i < NUM_RESTAURANTS; ++i) {
+	for (int i = 1; i < rated_restaurants_num; ++i) {
 		// Swap restaurant[i] back through the sorted list restaurants[0 .. i-1]
 		// until it finds its place.
 		for (int j = i; j > 0 && restaurants[j].dist < restaurants[j-1].dist; --j) {
 			swap(restaurants[j-1], restaurants[j]);
 		}
 	}
-	Serial.print("isort ");Serial.print("###");
-    Serial.print(" restaurants: ");Serial.print(millis()-start_time);Serial.print(" ms");
 
 }
 
@@ -69,7 +65,6 @@ int32_t partition(RestDist restaurants[], int32_t left_index, int32_t right_inde
     return left_index;
 }
 int quickSort(RestDist restaurants[], int32_t left_index, int32_t right_index){
-	int start_time = millis();
 
     if (left_index < right_index){
         // pivot chosen to be center of array
@@ -81,9 +76,6 @@ int quickSort(RestDist restaurants[], int32_t left_index, int32_t right_index){
         quickSort(restaurants, left_index, pivot_index-1);
         quickSort(restaurants, pivot_index, right_index);
     }
-
-    Serial.print("qsort ");Serial.print("###");
-    Serial.print(" restaurants: ");Serial.print(millis()-start_time);Serial.print(" ms");
 }
 
 // Computes the manhattan distance between two points (x1, y1) and (x2, y2).
@@ -96,17 +88,51 @@ int16_t manhattan(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
 	in restaurants[], and then sorts them based on their distance to the
 	point on the map represented by the MapView.
 */
-void getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* card, RestCache* cache) {
+void getAndSortRestaurants(const MapView& mv, RestDist restaurants[], Sd2Card* card, RestCache* cache, int sort_mode, int rating) {
 	restaurant r;
 
 	// First get all the restaurants and store their corresponding RestDist information.
+	int array_index = 0;
 	for (int i = 0; i < NUM_RESTAURANTS; ++i) {
 		getRestaurant(&r, i, card, cache);
-		restaurants[i].index = i;
-		restaurants[i].dist = manhattan(lat_to_y(r.lat), lon_to_x(r.lon),
-																		mv.mapY + mv.cursorY, mv.mapX + mv.cursorX);
+		if (r.rating >= rating){
+			// only sort restaurants over the rating threshold
+			// store the index of restaurant on the SD card and the manhattan distance
+			restaurants[array_index].index = i;
+			restaurants[array_index].dist = manhattan(lat_to_y(r.lat), lon_to_x(r.lon),
+							 				mv.mapY + mv.cursorY, mv.mapX + mv.cursorX);
+			array_index++; //increment array index
+		}
 	}
 
-	// Now sort them.
-	insertionSort(restaurants);
+	if (sort_mode == 0){
+		Serial.println("QUICK");
+		// if 0 is quick sort
+		int start_time = millis();
+		quickSort(restaurants,0,array_index-1);
+		Serial.print("qsort ");Serial.print(array_index);
+    	Serial.print(" restaurants: ");Serial.print(millis()-start_time);Serial.println(" ms");
+    	Serial.flush();
+	}else if(sort_mode == 1){
+		Serial.println("INSERTION");
+		// if 1 is insertion sort
+		int start_time = millis();
+		insertionSort(restaurants , array_index);
+		Serial.print("isort ");Serial.print(array_index);
+    	Serial.print(" restaurants: ");Serial.print(millis()-start_time);Serial.println(" ms");
+    	Serial.flush();
+	}else if(sort_mode == 2){
+		Serial.println("BOTH");
+		// if 2 is both
+		int i_start_time = millis();
+		insertionSort(restaurants , array_index);
+		Serial.print("isort ");Serial.print(array_index);
+    	Serial.print(" restaurants: ");Serial.print(millis()-i_start_time);Serial.println(" ms");
+
+    	int q_start_time = millis();
+		quickSort(restaurants,0,array_index-1);
+		Serial.print("qsort ");Serial.print(array_index);
+    	Serial.print(" restaurants: ");Serial.print(millis()-q_start_time);Serial.println(" ms");
+		Serial.flush();
+	}
 }
