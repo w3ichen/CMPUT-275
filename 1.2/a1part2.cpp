@@ -1,3 +1,13 @@
+//====================================================================
+//  Major Assignment #1 Part 2
+//  Restaurant Finder
+//  CMPUT 275 Winter 2020
+//
+//  Names: Gurbani Baweja, Weichen Qiu
+//  ID: 1590254, 1578205
+//=====================================================================
+
+
 #include <Arduino.h>
 #include <MCUFRIEND_kbv.h>
 #include <SPI.h>
