@@ -3,12 +3,17 @@ using namespace std;
 
 int qsort( int *a){
 int left_index = 0;
-int right_index = 5;
-	if (left_index >= right_index){
+int right_index = 3; //length -1
+int length = 4;
+
+	int pivot = a[length/2];
+	// first swap pivot with last
+	swap(a[length/2],a[length]);
+
+	if (left_index > right_index){
 		// stop programs if left is past or equal to the right index
 		return 0;
 	}
-	int pivot = (left_index + right_index)/2;
 	while (left_index <= right_index){
 		// keep looping if left is smaller than right index
 		while (a[left_index] < pivot){
