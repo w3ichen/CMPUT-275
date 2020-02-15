@@ -41,7 +41,8 @@ void insertionSort(RestDist restaurants[]) {
 			swap(restaurants[j-1], restaurants[j]);
 		}
 	}
-	cout << "isort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
+	Serial.print("isort ");Serial.print("###");
+    Serial.print(" restaurants: ");Serial.print(millis()-start_time);Serial.print(" ms");
 
 }
 
@@ -81,7 +82,8 @@ int quickSort(RestDist restaurants[], int32_t left_index, int32_t right_index){
         quickSort(restaurants, pivot_index, right_index);
     }
 
-    cout << "qsort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
+    Serial.print("qsort ");Serial.print("###");
+    Serial.print(" restaurants: ");Serial.print(millis()-start_time);Serial.print(" ms");
 }
 
 // Computes the manhattan distance between two points (x1, y1) and (x2, y2).

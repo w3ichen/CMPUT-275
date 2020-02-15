@@ -144,6 +144,11 @@ void setup() {
   beginMode0();
 }
 
+int ratingConversion( int rating_out_of_ten ){
+  // converts rating from 10 scale to 5 scale
+  return max( ( rating_out_of_ten + 1 ) /2 , 1);
+}
+
 void sideBar(int pty){
   tft.setTextColor(0x0000, 0xFFFF);
   tft.setTextSize(2);
@@ -386,7 +391,10 @@ void scrollingMap() {
 			int16_t rest_x_tft = lon_to_x(r.lon)-curView.mapX, rest_y_tft = lat_to_y(r.lat)-curView.mapY;
 
 			// only draw if entire radius-3 circle will be in the map display
-			if (rest_x_tft >= 3 && rest_x_tft < DISP_WIDTH-3 &&  rest_y_tft >= 3 && rest_y_tft < DISP_HEIGHT-3) {
+			// AND must have rating greater or equal to rating in side bar
+			if (rest_x_tft >= 3 && rest_x_tft < DISP_WIDTH-3 &&  
+				rest_y_tft >= 3 && rest_y_tft < DISP_HEIGHT-3 &&
+				ratingConversion(r.rating) >= rating) { 
 				tft.fillCircle(rest_x_tft, rest_y_tft, 3, TFT_BLUE);
 			}
 		}
@@ -395,8 +403,6 @@ void scrollingMap() {
 		// if buttons are pressed
 		sideBar(pty);
 	}
-
-
 }
 
 // Process joystick movement when in mode 1.
