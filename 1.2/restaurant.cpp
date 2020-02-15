@@ -44,17 +44,45 @@ void insertionSort(RestDist restaurants[]) {
 	cout << "isort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
 
 }
-void quickSort(RestDist restaurants[]){
+
+int32_t partition(RestDist restaurants[], int32_t left_index, int32_t right_index, int32_t pivot){
+    while (left_index <= right_index){
+        // keep looping if left is smaller than right index
+        while (restaurants[left_index].dist < pivot){
+            // keep moving left index right until value is bigger than pivot
+            left_index++;
+        }
+        while (restaurants[right_index].dist > pivot){
+            // keep moving right index left unril value is less than pivot
+            right_index--;
+        }
+        if (left_index <= right_index){
+            // swap the two values so that small is on left and big is on right of pivot
+            swap(restaurants[left_index], restaurants[right_index]);
+            // increment left and right indexes
+            left_index++;
+            right_index--;
+        }
+    }
+    // return the left index
+    return left_index;
+}
+int quickSort(RestDist restaurants[], int32_t left_index, int32_t right_index){
 	int start_time = millis();
 
+    if (left_index < right_index){
+        // pivot chosen to be center of array
+        int pivot = restaurants[(left_index+right_index)/2].dist;
+        // call partition to get the pivot index
+        uint32_t pivot_index = partition(restaurants, left_index, right_index, pivot);
+        //recursively call twice
+        // recursively sort array before and after pivot
+        quickSort(restaurants, left_index, pivot_index-1);
+        quickSort(restaurants, pivot_index, right_index);
+    }
 
-	cout << "qsort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
-
+    cout << "qsort "<<"###"<<" restaurants: "<<millis()-start_time<<" ms";
 }
-
-
-
-
 
 // Computes the manhattan distance between two points (x1, y1) and (x2, y2).
 int16_t manhattan(int16_t x1, int16_t y1, int16_t x2, int16_t y2) {
