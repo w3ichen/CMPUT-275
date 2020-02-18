@@ -265,6 +265,7 @@ void printRestaurant(int i) {
 	}
 	tft.setCursor(0, (i%REST_DISP_NUM)*15);
 	tft.print(r.name);
+
 }
 
 // Begin mode 1 by sorting the restaurants around the cursor
@@ -415,68 +416,9 @@ void scrollingMap() {
 }
 
 
+void Scrollable_List(int16_t &Rest_selected, bool up_or_down){
 
-/*
-  This function moves the selection bar up and down the list
-  Arguments: index of selected restaurant, boolean of direction
-*/
 
-void refresh_list(int16_t Rest_selected, bool up_or_down){
-  
-  pinMode(YP, OUTPUT); 
-  pinMode(XM, OUTPUT); 
-  
-  tft.setCursor(0, 0);
-  tft.setTextWrap(false);
-  tft.setTextSize(2);
-
-  if (up_or_down == true){
-    
-    // going up
-    for (int i=0;i<Rest_selected;i++){ 
-      tft.print("\n");
-    }
-    
-    // selected is on top
-    // call the restaurant name from sd card
-    restaurant r;
-    getRestaurant(&r, restaurants[Rest_selected].index, &card, &cache);
-    
-    // overwrite the old text
-    tft.setTextColor(0x0000, 0xFFFF);
-    tft.print(r.name);
-    tft.print("\n"); 
-    
-    // deselect the one under it
-    getRestaurant(&r, restaurants[Rest_selected+1].index, &card, &cache);
-    tft.setTextColor(0xFFFF, 0x0000); 
-    tft.print(r.name);
-  }
-
-  else{
-  
-    // going down
-    for (int i=0;i<Rest_selected-1;i++){ 
-      tft.print("\n");
-    }
-
-    restaurant r;
-    getRestaurant(&r, restaurants[Rest_selected-1].index, &card, &cache);
-    tft.setTextColor(0xFFFF, 0x0000);
-    tft.print(r.name);
-    tft.print("\n"); 
-    
-    // deselect the one under it
-    getRestaurant(&r, restaurants[Rest_selected].index, &card, &cache);
-    tft.setTextColor(0x0000, 0xFFFF); 
-    tft.print(r.name);
-  }
-
-  delay(100);
-}
-
-void Scrollable_List(int16_t &Rest_selected,bool up_or_down){
-  
   pinMode(YP, OUTPUT); 
   pinMode(XM, OUTPUT); 
 
@@ -485,64 +427,21 @@ void Scrollable_List(int16_t &Rest_selected,bool up_or_down){
   tft.setTextSize(2);
 
   if(up_or_down == true){
+  	// page down
+
 
   	for(int16_t k = Rest_selected; k<(Rest_selected+ REST_DISP_NUM) ; k++){
 
-    // read from sd card the next 21 restaurants
-    restaurant r;
-    
-	getRestaurant(&r, restaurants[k].index, &card, &cache);
-    
-    pinMode(YP, OUTPUT); 
-    pinMode(XM, OUTPUT); 
-    
-    tft.setTextColor(0xFFFF, 0x0000);  
-
-    tft.setCursor(0, (k%REST_DISP_NUM)*15);
-    tft.print(r.name);
-
+    	printRestaurant(k);
   }
-  }
+}
 
   else if(up_or_down == false){
-    
-    
-    //int cursor_pos = 0;
-  	/*
-  	for(int16_t k = Rest_selected ; k<=(Rest_selected+REST_DISP_NUM); k--){
-
-    
-    // read from sd card the next 21 restaurants
-    restaurant r;
-    tft.setTextColor(0xFFFF, 0x0000);  
-	getRestaurant(&r, restaurants[k].index, &card, &cache);
-    
-    pinMode(YP, OUTPUT); 
-    pinMode(XM, OUTPUT); 
-    
-    tft.setTextColor(0xFFFF, 0x0000);  
-
-    tft.setCursor(0, ((k-REST_DISP_NUM)%REST_DISP_NUM)*15);
-    tft.print(r.name);
-    //cursor_pos = cursor_pos+15;
-  */
-  for(int16_t k = Rest_selected ; k<=(Rest_selected+REST_DISP_NUM); k--){
-  restaurant r;
-  /*tft.setCursor(0, (15)*(k-1));
-  getRestaurant(&r, restaurants[k-1].index, &card, &cache);
-  tft.fillRect(0, (15)*(Rest_selected), 12*strlen(r.name),16, TFT_BLACK);
-  tft.setTextColor(TFT_WHITE);
-  tft.print(r.name);
-*/
-  
-  tft.setCursor(0, (15)*(k%REST_DISP_NUM));
-  getRestaurant(&r, restaurants[k].index, &card, &cache);
-  tft.fillRect(0, (15)*(k), 12*strlen(r.name), 16, TFT_WHITE);
-  tft.setTextColor(TFT_BLACK);
-  tft.print(r.name);   
-  
+     // page up
+  	for(int16_t k = Rest_selected - REST_DISP_NUM+1; k<Rest_selected+1 ; k++){
+   		printRestaurant(k);
+  	}
   }
-	  }
    
 }
 
@@ -560,16 +459,18 @@ void scrollingMenu() {
 	else if (v < JOY_CENTRE - JOY_DEADZONE) {
 		--selectedRest;
 	}
+	// constrain the range 
+	selectedRest = constrain(selectedRest,0,NUM_RESTAURANTS);
 
 	if ((selectedRest % REST_DISP_NUM == 0) && (v > JOY_CENTRE + JOY_DEADZONE)){
-		// scrolling down
-		Serial.println("Reached 20");
-		Scrollable_List(selectedRest,true);
+		// page down
+		Scrollable_List(selectedRest, true);
+		oldRest = selectedRest;
 	}
-	else if ((selectedRest % REST_DISP_NUM == 0) && (v < JOY_CENTRE - JOY_DEADZONE)){
-        // scrolling up
-        Serial.println("Reached 0");
-		Scrollable_List(selectedRest,false);
+	else if ((selectedRest % (REST_DISP_NUM) == 20) && (v < JOY_CENTRE - JOY_DEADZONE)){
+        // page up
+		Scrollable_List(selectedRest, false);
+		oldRest = selectedRest;
 	}
 	//selectedRest = constrain(selectedRest, 0, REST_DISP_NUM -1);
 

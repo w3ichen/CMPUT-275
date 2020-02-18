@@ -63,6 +63,8 @@
 // number of restaurants to display
 #define REST_DISP_NUM 21
 
+
+
 // ********** BEGIN GLOBAL VARIABLES ************
 MCUFRIEND_kbv tft;
 Sd2Card card;
@@ -76,6 +78,8 @@ TouchScreen ts = TouchScreen(XP, YP, XM, YM, 300);
 // be one of the "few" that are allowed. As long as we don't clutter the global
 // space with too many variables.
 int selectedRest;
+
+
 
 // which mode are we in?
 enum DisplayMode { MAP, MENU } displayMode;
@@ -211,11 +215,6 @@ void drawSidebar(){
 }
 
 
-
-
-
-
-
 // Draw the map patch of edmonton over the preView position, then
 // draw the red cursor at the curView position.
 void moveCursor() {
@@ -251,12 +250,11 @@ void beginMode0() {
 }
 
 // Print the i'th restaurant in the sorted list.
-// Assumes 0 <= i < 21 for part 1.
 void printRestaurant(int i) {
 	restaurant r;
 
 	// get the i'th restaurant
-	getRestaurant(&r, restaurants[i].index, &card, &cache);
+	getRestaurant(&r,restaurants[i].index, &card, &cache);
 
 	// Set its colour based on whether or not it is the selected restaurant.
 	if (i != selectedRest) {
@@ -265,7 +263,7 @@ void printRestaurant(int i) {
 	else {
 		tft.setTextColor(TFT_BLACK, TFT_WHITE);
 	}
-	tft.setCursor(0, i*15);
+	tft.setCursor(0, (i%REST_DISP_NUM)*15);
 	tft.print(r.name);
 }
 
@@ -328,6 +326,8 @@ void checkRedrawMap() {
 		lcd_image_draw(&edmontonBig, &tft, curView.mapX, curView.mapY, 0, 0, DISP_WIDTH, DISP_HEIGHT);
 	}
 }
+
+
 
 // Process joystick and touchscreen input when in mode 0.
 void scrollingMap() {
@@ -414,8 +414,141 @@ void scrollingMap() {
 	}
 }
 
+
+
+/*
+  This function moves the selection bar up and down the list
+  Arguments: index of selected restaurant, boolean of direction
+*/
+
+void refresh_list(int16_t Rest_selected, bool up_or_down){
+  
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT); 
+  
+  tft.setCursor(0, 0);
+  tft.setTextWrap(false);
+  tft.setTextSize(2);
+
+  if (up_or_down == true){
+    
+    // going up
+    for (int i=0;i<Rest_selected;i++){ 
+      tft.print("\n");
+    }
+    
+    // selected is on top
+    // call the restaurant name from sd card
+    restaurant r;
+    getRestaurant(&r, restaurants[Rest_selected].index, &card, &cache);
+    
+    // overwrite the old text
+    tft.setTextColor(0x0000, 0xFFFF);
+    tft.print(r.name);
+    tft.print("\n"); 
+    
+    // deselect the one under it
+    getRestaurant(&r, restaurants[Rest_selected+1].index, &card, &cache);
+    tft.setTextColor(0xFFFF, 0x0000); 
+    tft.print(r.name);
+  }
+
+  else{
+  
+    // going down
+    for (int i=0;i<Rest_selected-1;i++){ 
+      tft.print("\n");
+    }
+
+    restaurant r;
+    getRestaurant(&r, restaurants[Rest_selected-1].index, &card, &cache);
+    tft.setTextColor(0xFFFF, 0x0000);
+    tft.print(r.name);
+    tft.print("\n"); 
+    
+    // deselect the one under it
+    getRestaurant(&r, restaurants[Rest_selected].index, &card, &cache);
+    tft.setTextColor(0x0000, 0xFFFF); 
+    tft.print(r.name);
+  }
+
+  delay(100);
+}
+
+void Scrollable_List(int16_t &Rest_selected,bool up_or_down){
+  
+  pinMode(YP, OUTPUT); 
+  pinMode(XM, OUTPUT); 
+
+  tft.fillScreen(0);
+  tft.setTextWrap(false);
+  tft.setTextSize(2);
+
+  if(up_or_down == true){
+
+  	for(int16_t k = Rest_selected; k<(Rest_selected+ REST_DISP_NUM) ; k++){
+
+    // read from sd card the next 21 restaurants
+    restaurant r;
+    
+	getRestaurant(&r, restaurants[k].index, &card, &cache);
+    
+    pinMode(YP, OUTPUT); 
+    pinMode(XM, OUTPUT); 
+    
+    tft.setTextColor(0xFFFF, 0x0000);  
+
+    tft.setCursor(0, (k%REST_DISP_NUM)*15);
+    tft.print(r.name);
+
+  }
+  }
+
+  else if(up_or_down == false){
+    
+    
+    //int cursor_pos = 0;
+  	/*
+  	for(int16_t k = Rest_selected ; k<=(Rest_selected+REST_DISP_NUM); k--){
+
+    
+    // read from sd card the next 21 restaurants
+    restaurant r;
+    tft.setTextColor(0xFFFF, 0x0000);  
+	getRestaurant(&r, restaurants[k].index, &card, &cache);
+    
+    pinMode(YP, OUTPUT); 
+    pinMode(XM, OUTPUT); 
+    
+    tft.setTextColor(0xFFFF, 0x0000);  
+
+    tft.setCursor(0, ((k-REST_DISP_NUM)%REST_DISP_NUM)*15);
+    tft.print(r.name);
+    //cursor_pos = cursor_pos+15;
+  */
+  for(int16_t k = Rest_selected ; k<=(Rest_selected+REST_DISP_NUM); k--){
+  restaurant r;
+  /*tft.setCursor(0, (15)*(k-1));
+  getRestaurant(&r, restaurants[k-1].index, &card, &cache);
+  tft.fillRect(0, (15)*(Rest_selected), 12*strlen(r.name),16, TFT_BLACK);
+  tft.setTextColor(TFT_WHITE);
+  tft.print(r.name);
+*/
+  
+  tft.setCursor(0, (15)*(k%REST_DISP_NUM));
+  getRestaurant(&r, restaurants[k].index, &card, &cache);
+  tft.fillRect(0, (15)*(k), 12*strlen(r.name), 16, TFT_WHITE);
+  tft.setTextColor(TFT_BLACK);
+  tft.print(r.name);   
+  
+  }
+	  }
+   
+}
+
 // Process joystick movement when in mode 1.
 void scrollingMenu() {
+
 	int oldRest = selectedRest;
 
 	int v = analogRead(JOY_VERT_ANALOG);
@@ -427,7 +560,18 @@ void scrollingMenu() {
 	else if (v < JOY_CENTRE - JOY_DEADZONE) {
 		--selectedRest;
 	}
-	selectedRest = constrain(selectedRest, 0, REST_DISP_NUM -1);
+
+	if ((selectedRest % REST_DISP_NUM == 0) && (v > JOY_CENTRE + JOY_DEADZONE)){
+		// scrolling down
+		Serial.println("Reached 20");
+		Scrollable_List(selectedRest,true);
+	}
+	else if ((selectedRest % REST_DISP_NUM == 0) && (v < JOY_CENTRE - JOY_DEADZONE)){
+        // scrolling up
+        Serial.println("Reached 0");
+		Scrollable_List(selectedRest,false);
+	}
+	//selectedRest = constrain(selectedRest, 0, REST_DISP_NUM -1);
 
 	// If we picked a new restaurant, update the way it and the previously
 	// selected restaurant are displayed.
@@ -436,7 +580,6 @@ void scrollingMenu() {
 		printRestaurant(selectedRest);
 		delay(50); // so we don't scroll too fast
 	}
-
 	// If we clicked on a restaurant.
 	if (digitalRead(JOY_SEL) == LOW) {
 		restaurant r;
@@ -451,15 +594,20 @@ void scrollingMenu() {
 		// Draw the cursor, clamping to an edge of the map if needed.
 		curView.cursorX = constrain(lon_to_x(r.lon) - curView.mapX, CURSOR_SIZE/2, DISP_WIDTH-CURSOR_SIZE/2-1);
 		curView.cursorY = constrain(lat_to_y(r.lat) - curView.mapY, CURSOR_SIZE/2, DISP_HEIGHT-CURSOR_SIZE/2-1);
-
+       
+		
 		preView = curView;
 
 		beginMode0();
 
 		// Ensures a long click of the joystick will not register twice.
 		while (digitalRead(JOY_SEL) == LOW) { delay(10); }
+	    
+	   
 	}
 }
+
+
 
 int main() {
 	setup();
