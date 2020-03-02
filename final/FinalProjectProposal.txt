@@ -1,0 +1,26 @@
+CMPUT 275 FINAL PROJECT PROPOSAL
+
+Project Title: Arduino Wired Text Message
+Group Members: Weichen Qiu, Gurbani Baweja
+_______
+
+Description:
+In this project, we are planning to implement a text message application between 2 arduinos.
+The arduinos will be wired together either directed or via a C++ server.
+Both arduinos will have a GUI on the touchscreen with a touch keyboard and the messages. We will 
+have to implement a compact keyboard that is accurate and scrolling of the messages.
+The messages will be stored on a linked list algorithm that will store the order of the messages.
+To add more complexity, we plan on use a passive buzzer to sound when messages are received
+and a tilt sensor to rotate the display between portrait and landscape mode. At the very end if there
+is still time, we may encrypt the messages given that it does not increase runtime significantly.
+
+Milestones:
+1. March 20 - start on project
+2. By March 25 - Finish touchscreen and user interface
+3. B March 27 - Add tilt and speaker
+4. By March 28 - Finish backend with communication between the two arduinos
+5. April 2 - Demo date
+6. April 10 - Code Completed
+
+Bonus Milestones:
+- Encryption
