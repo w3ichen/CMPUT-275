@@ -1,7 +1,18 @@
+/*
+  Major Assignment #1 Part 1
+  Restaurant Finder
+  CMPUT 275 Winter 2020
+
+  Names: Gurbani Baweja, Weichen Qiu
+  ID: 1590254, 1578205
+*/
+
 #include <unordered_map>
 #include "wdigraph.h"
+#include "dijkstra.h"
 #include <iostream>
 #include <fstream> //for reading text file
+#include <list> //for calculated path
 
 using namespace std;
 
@@ -78,22 +89,74 @@ void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& poin
   		}
   	}
   	inFile.close(); //close file
+}
+void request(WDigraph graph, unordered_map<int, PIL> &tree,
+			 unordered_map<int, Point> points){
+	Point start;
+	Point end;
+	string newLine;
+	string A;
+	cin >> start.lat >> start.lon >> end.lat >> end.lon >> newLine;
+	// find the closest vertices using Points
+	long long startMin, endMin;
+	long long startVertex, endVertex;
+	for (auto p: points){
+		if (manhattan(p.second, start) < startMin){
+			// if closer than start minimum
+			startMin = manhattan(p.second, start);
+			startVertex = p.first; // p.first is the vertex number
+		}
+		if (manhattan(p.second, end) < endMin){
+			// same for end coordinates
+			endMin = manhattan(p.second, end);
+			endVertex = p.first;
+		}
+	}
+	cout<<"start: "<<startVertex<<" -> to: "<<endVertex<<endl;
+
+	// generate search tree of startVertex using dijkstra 
+	dijkstra(graph,startVertex,tree);
+
+	// calculate path using searchtree
+	list<int> path;
+
+	int stepping = endVertex;
+	while (stepping != startVertex) {
+	    path.push_front(stepping);
+
+	    // crawl up the search tree one step
+	    stepping = tree[stepping].first;
+	}
+	path.push_front(startVertex);
+
+
+
+	for (auto p: path) {
+	    cout << "W " << points[p].lat << " " << points[p].lon << endl;
+	    cin >> A; // wait for A
+
+	}
+	cout << "E" << endl; //end
+
+
 
 }
 
 int main(){
-	  	
+
     WDigraph graph;
+    unordered_map<int, PIL> tree;
 
 	unordered_map<int, Point> points;
 	readGraph("edmonton-roads-2.0.1.txt",graph,points);
 
-	cout<<graph.size()<<endl;
-	#include<vector>
-	vector<int> v = graph.vertices();
-	for (auto i:v){
-		cout<<i<<"  -> "<<points[i].lat<<" "<<points[i].lon<<endl;
-	}cout<<endl<<endl<<endl;
+	char command;
+
+	cin >> command;
+	if (command = 'R'){
+		// request
+		request(graph, tree, points);
+	}
 
 
 }
