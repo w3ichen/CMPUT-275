@@ -1,0 +1,34 @@
+Major Assignment #2 Part 1
+Driving Route Finder
+CMPUT 275 Winter 2020
+
+Names: Gurbani Baweja, Weichen Qiu
+ID: 1590254, 1578205
+
+
+Included Files:
+- server.cpp
+- heap.h
+- dijkstra.h
+- dijkstra.cpp
+- digraph.h
+- digraph.cpp
+- wdigraph.h
+- Makefile
+- README
+
+
+
+Running Instructions:
+	1. Type make into terminal to compile and link all files
+	2. type ./server <input_file.txt> output_file.txt into terminal to 		test
+		ex: ./server < test00-input.txt > mysol.txt
+	3. Or input can also be received through the terminal directly by    	using this format to make a request "R start_lat start_lon 		   end_lat end_lon<\n>"
+
+Accessories: n/a
+
+Wiring instructions:
+	n/a
+
+Notes and Assumptions:
+	n/a

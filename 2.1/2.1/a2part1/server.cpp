@@ -8,8 +8,8 @@
 */
 
 #include <unordered_map>
-#include "wdigraph.h"
-#include "dijkstra.h"
+#include "wdigraph.h" // file for graph
+#include "dijkstra.h" // file for dijkstra algorithm
 #include <iostream>
 #include <fstream> //for reading text file
 #include <list> //for calculated path
@@ -22,25 +22,28 @@ struct Point {
 };
 
 long long manhattan(const Point& pt1, const Point& pt2) {
-	// Return the Manhattan distance between the two given points
+/*
+	 Return the Manhattan distance between the two given points
+	 Arguments: the two points as Point struct to get manhattan distance of
+	 Returns: manhattan distance as long long
+*/
 	// |x1 - x2| + |y1 - y2|
 	return abs(pt1.lat - pt2.lat) + abs(pt1.lon - pt2.lon);
 }
 
 void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& points) {
-	/*
+/*
 	Read the Edmonton map data from the provided file
 	and load it into the given WDigraph object.
 	Store vertex coordinates in Point struct and map
 	each vertex to its corresponding Point struct.
-	PARAMETERS:
+	Arguments:
 	filename: name of the file describing a road network
 	graph: an instance of the weighted directed graph (WDigraph) class
 	points: a mapping between vertex identifiers and their coordinates
-	*/
+*/
+	// declare variables
 	double coord;
-	static_cast <long long> (coord*100000);
-
 	char charInput;
   	int ID, start, end;
   	string address;
@@ -60,6 +63,7 @@ void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& poin
   			inFile >> charInput; // (4) second comma
   			inFile >> coord; // (5) lat
   			if (coord < 100){
+  				// if decimal, use static_cast to get right format
   				coord_xy.lat = static_cast <long long> (coord*100000);
   			}else{
   				coord_xy.lat = static_cast <long long> (coord);
@@ -81,8 +85,7 @@ void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& poin
   			inFile >> charInput; // (4) read in second comma
   			inFile >> end; // (5) read in end
   			// directed edge where cost is calculated using manhattan function
-  			graph.addEdge(start,end,
-  					manhattan(points[start],points[end]) );
+  			graph.addEdge(start,end,manhattan(points[start],points[end]) );
   			inFile >> charInput; // (6) read in third comma
   			getline(inFile,address); // (7) read in rest of line as address
   			// go to next line
@@ -90,15 +93,26 @@ void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& poin
   	}
   	inFile.close(); //close file
 }
+
 void request(WDigraph graph, unordered_map<int, PIL> &tree,
 			 unordered_map<int, Point> points){
-	Point start;
+/*
+	Processes route request
+	Arguments: graph with all vertices and edgies, unordered map to
+			store search tree, points to store lat and lon of each vertex
+	Returns: tree through pass by reference
+*/
+	// declare variables
+	Point start; 
 	Point end;
 	string newLine;
 	string A;
+	// read in user request
+	
 	cin >> start.lat >> start.lon >> end.lat >> end.lon >> newLine;
 	// find the closest vertices using Points
-	long long startMin, endMin;
+	long long startMin = 500; // arbitrary large number
+	long long endMin = 500;
 	long long startVertex, endVertex;
 	for (auto p: points){
 		if (manhattan(p.second, start) < startMin){
@@ -112,51 +126,47 @@ void request(WDigraph graph, unordered_map<int, PIL> &tree,
 			endVertex = p.first;
 		}
 	}
-	cout<<"start: "<<startVertex<<" -> to: "<<endVertex<<endl;
 
 	// generate search tree of startVertex using dijkstra 
 	dijkstra(graph,startVertex,tree);
 
-	// calculate path using searchtree
-	list<int> path;
+    if (tree.find(endVertex) == tree.end()) {
+    	// no path found
+      cout << "N 0" << endl;
+    }else{
+		// calculate path using searchtree
+		list<int> path;
+		int stepping = endVertex;
+		while (stepping != startVertex) {
+		    path.push_front(stepping); // push to path
+		    // crawl up the search tree one step
+		    stepping = tree[stepping].first;
+		}
+		path.push_front(startVertex); // push startVertex to path
 
-	int stepping = endVertex;
-	while (stepping != startVertex) {
-	    path.push_front(stepping);
-
-	    // crawl up the search tree one step
-	    stepping = tree[stepping].first;
+		cout << "N " << path.size() << endl;
+		for (auto p: path) {
+			// loop through all waypoints in path
+		    cout << "W " << points[p].lat << " " << points[p].lon << endl;
+		    cin >> A; // wait for A
+		}
+		cout << "E" << endl; //end
 	}
-	path.push_front(startVertex);
-
-
-
-	for (auto p: path) {
-	    cout << "W " << points[p].lat << " " << points[p].lon << endl;
-	    cin >> A; // wait for A
-
-	}
-	cout << "E" << endl; //end
-
-
-
 }
 
 int main(){
-
     WDigraph graph;
     unordered_map<int, PIL> tree;
-
 	unordered_map<int, Point> points;
+
+	// read graph from txt file
 	readGraph("edmonton-roads-2.0.1.txt",graph,points);
 
+	// read request
 	char command;
-
 	cin >> command;
-	if (command = 'R'){
+	if (command == 'R'){
 		// request
 		request(graph, tree, points);
 	}
-
-
 }
