@@ -44,8 +44,19 @@ void process_line() {
 }
 
 void loop() {
-  char in_char;
 
+if (Serial.available()){
+    char in_char = Serial.read();
+    if (in_char == 'A'){
+        for (int i=0;i<5;i++){
+          //Serial.write("hello");
+          Serial.println("hello");
+        }
+        Serial.println("in arduino if");
+    }
+}
+
+/*
   if (Serial.available()) {
       // read the incoming byte:
       char in_char = Serial.read();
@@ -65,4 +76,7 @@ void loop() {
           }
         }
     }
+    */
+
+
   }

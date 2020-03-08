@@ -9,7 +9,7 @@
 #include <iostream>
 #include <cassert>
 #include <string>
-#include "SerialPort.h"
+#include "serialport.h"
 
 using namespace std;
 
@@ -48,19 +48,28 @@ int main() {
   cout << "Server is in phase " << curPhase;
   cout << "Waiting for client to reply to previous message..." << endl;
 
-  for (int idx = 0; idx <= 10; idx++) {
+
+//////////////////////////////////////////////////////
+
+  // for (int idx = 0; idx <= 10; idx++) {
+  //   line = Serial.readline();
+  //   cout << "Received: " << line;
+
+  //   if (idx > 10) {
+  //     cout << "Exchange Finished" << endl;
+  //     break;
+  //   }
+
+  //   string message = to_string(idx); // requires c++11
+  //   cout << "Sending message: <" << message << "\\n>" << endl;
+  //   assert(Serial.writeline(message+"\n"));
+  // };
+for (int i=0;i<5;i++){
     line = Serial.readline();
-    cout << "Received: " << line;
+    cout<<"in for loop"<<endl;
+  cout << "Serial received: " << line<<endl;
+}
 
-    if (idx > 10) {
-      cout << "Exchange Finished" << endl;
-      break;
-    }
-
-    string message = to_string(idx); // requires c++11
-    cout << "Sending message: <" << message << "\\n>" << endl;
-    assert(Serial.writeline(message+"\n"));
-  };
 
   cout << "Finished communications!" << endl;
 
