@@ -1,8 +1,19 @@
 #include "draw_route.h"
 #include "map_drawing.h"
 
+
 extern shared_vars shared;
 
 void draw_route() {
-  // implement this!
+
+	int32_t start_x,start_y, end_x,end_y;
+	for (int i=0;i<shared.num_waypoints-1;i++){
+		// access values for lon and lat and covert to x and y
+		start_x = longitude_to_x(shared.map_number, shared.waypoints[i].lon);
+		start_y = latitude_to_y(shared.map_number, shared.waypoints[i].lat);
+		end_x = longitude_to_x(shared.map_number, shared.waypoints[i+1].lon);
+		end_y = latitude_to_y(shared.map_number, shared.waypoints[i+1].lat);
+	}
+
+
 }

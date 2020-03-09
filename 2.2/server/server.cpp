@@ -99,7 +99,7 @@ void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& poin
   	inFile.close(); //close file
 }
 
-void request(WDigraph graph, unordered_map<int, PIL> &tree,
+void request(WDigraph graph, unordered_map<int, PIL> tree,
 			 unordered_map<int, Point> points){
 /*
 	Processes route request
@@ -129,7 +129,6 @@ void request(WDigraph graph, unordered_map<int, PIL> &tree,
 
 		curr_mode = CALCULATE_ROUTE;
 	}
-
 	if (curr_mode == CALCULATE_ROUTE){
 		// find the closest vertices using Points
 		long long startMin = 500; // arbitrary large number
@@ -147,13 +146,12 @@ void request(WDigraph graph, unordered_map<int, PIL> &tree,
 				endVertex = p.first;
 			}
 		}
-
 		// generate search tree of startVertex using dijkstra 
 		dijkstra(graph,startVertex,tree);
-
 	    if (tree.find(endVertex) == tree.end()) {
 	    	// no path found
 	      	Serial.writeline("N 0\n");
+	      	cout << "No Path" <<endl;
 	    }else{
 			// calculate path using searchtree
 			list<int> path;
@@ -167,16 +165,22 @@ void request(WDigraph graph, unordered_map<int, PIL> &tree,
 
 			// send size
 			Serial.writeline("N "+to_string(path.size())+"\n");
-			Serial.readline(1); // wait for acknowledgement
-			cout<< "N "<<path.size();
+			A = Serial.readline(); // wait for acknowledgement
+			cout<<"Arduino: "<<A<<endl;
+			cout<< "N "<<path.size()<<endl;
 
 			for (auto p: path) {
 				// loop through all waypoints in path
 				line = "W "+to_string(points[p].lat)+" "+to_string(points[p].lon)+"\n";
 				Serial.writeline(line);
-			    Serial.readline(1); //wait for acknowledgement
+			    A = Serial.readline(); //wait for acknowledgement
+			   	cout<<"Arduino: "<<A<<endl;
+			    cout<<"Server: "<<line<<endl;
 			}
+		    A = Serial.readline(); //wait for acknowledgement
+		   	cout<<"Arduino: "<<A<<endl;
 			Serial.writeline("E\n"); //End
+			cout<<"E"<<endl;
 		}
 	}
 	
@@ -193,18 +197,21 @@ int main(){
 
 	// read request
 	string clientRequest;
-	
+	bool validRequest = false;
 	while (true){
-		cout<<"waiting for request"<<endl;
-		clientRequest = Serial.readline();
-		cout<<"request code: "<<clientRequest<<endl;
-		
+		cout<<"waiting for request..."<<endl;
+		clientRequest = Serial.readline(); // read in R
+		cout<<"client request is: "<<clientRequest<<endl;
 		if (strcmp(clientRequest.c_str(),"R")){
+			validRequest = true; 
+		}
+		if (validRequest){
 			// if begins with R
 			cout<<"going to request"<<endl;
 			request(graph, tree, points);
 		}
-		cout<<"after request"<<endl;
+		cout<<"request complete"<<endl<<endl;
+		validRequest = false; //reset
 	}
 	
 }
