@@ -51,24 +51,20 @@ int main() {
 
 //////////////////////////////////////////////////////
 
-  // for (int idx = 0; idx <= 10; idx++) {
-  //   line = Serial.readline();
-  //   cout << "Received: " << line;
-
-  //   if (idx > 10) {
-  //     cout << "Exchange Finished" << endl;
-  //     break;
-  //   }
-
-  //   string message = to_string(idx); // requires c++11
-  //   cout << "Sending message: <" << message << "\\n>" << endl;
-  //   assert(Serial.writeline(message+"\n"));
-  // };
-for (int i=0;i<5;i++){
+  for (int idx = 0; idx <= 10; idx++) {
     line = Serial.readline();
-    cout<<"in for loop"<<endl;
-  cout << "Serial received: " << line<<endl;
-}
+    cout << "Received: " << line;
+
+    if (idx > 10) {
+      cout << "Exchange Finished" << endl;
+      break;
+    }
+
+    string message = to_string(idx); // requires c++11
+    cout << "Sending message: <" << message << "\\n>" << endl;
+    assert(Serial.writeline(message+"\n"));
+  };
+
 
 
   cout << "Finished communications!" << endl;

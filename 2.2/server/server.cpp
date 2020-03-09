@@ -13,9 +13,13 @@
 #include <iostream>
 #include <fstream> //for reading text file
 #include <list> //for calculated path
+#include <cassert>
+#include <string.h>
 #include "serialport.h"
 
 using namespace std;
+
+SerialPort Serial("/dev/ttyACM0"); //intiialize serial communication
 
 struct Point {
 	long long lat; // latitude of the point
@@ -104,62 +108,82 @@ void request(WDigraph graph, unordered_map<int, PIL> &tree,
 	Returns: tree through pass by reference
 */
 	// declare variables
+	enum {INITIAL_REQUEST, CALCULATE_ROUTE, TIMEOUT} curr_mode = INITIAL_REQUEST;
+
 	Point start; 
 	Point end;
 	string newLine;
 	string A;
 	string line;
-	SerialPort Serial; // new communication object
+
 	// read in user request
-	line = Serial.readline(1);
-	cout << "received: "<<line<<endl;
+	if (curr_mode == INITIAL_REQUEST){
+		// (1) get lat and lon of start and end points
+		start.lat = stol(Serial.readline());
+		start.lon = stol(Serial.readline());
+		end.lat = stol(Serial.readline());
+		end.lon = stol(Serial.readline());
 
-	//cin >> start.lat >> start.lon >> end.lat >> end.lon >> newLine;
-	// find the closest vertices using Points
-	long long startMin = 500; // arbitrary large number
-	long long endMin = 500;
-	long long startVertex, endVertex;
-	for (auto p: points){
-		if (manhattan(p.second, start) < startMin){
-			// if closer than start minimum
-			startMin = manhattan(p.second, start);
-			startVertex = p.first; // p.first is the vertex number
-		}
-		if (manhattan(p.second, end) < endMin){
-			// same for end coordinates
-			endMin = manhattan(p.second, end);
-			endVertex = p.first;
-		}
+		cout<<"R "<<start.lat<<" "<<start.lon<<" "<<
+		end.lat<<" "<<end.lon<<endl;
+
+		curr_mode = CALCULATE_ROUTE;
 	}
 
-	// generate search tree of startVertex using dijkstra 
-	dijkstra(graph,startVertex,tree);
-
-    if (tree.find(endVertex) == tree.end()) {
-    	// no path found
-      cout << "N 0" << endl;
-    }else{
-		// calculate path using searchtree
-		list<int> path;
-		int stepping = endVertex;
-		while (stepping != startVertex) {
-		    path.push_front(stepping); // push to path
-		    // crawl up the search tree one step
-		    stepping = tree[stepping].first;
+	if (curr_mode == CALCULATE_ROUTE){
+		// find the closest vertices using Points
+		long long startMin = 500; // arbitrary large number
+		long long endMin = 500;
+		long long startVertex, endVertex;
+		for (auto p: points){
+			if (manhattan(p.second, start) < startMin){
+				// if closer than start minimum
+				startMin = manhattan(p.second, start);
+				startVertex = p.first; // p.first is the vertex number
+			}
+			if (manhattan(p.second, end) < endMin){
+				// same for end coordinates
+				endMin = manhattan(p.second, end);
+				endVertex = p.first;
+			}
 		}
-		path.push_front(startVertex); // push startVertex to path
 
-		cout << "N " << path.size() << endl;
-		for (auto p: path) {
-			// loop through all waypoints in path
-		    cout << "W " << points[p].lat << " " << points[p].lon << endl;
-		    cin >> A; // wait for A
+		// generate search tree of startVertex using dijkstra 
+		dijkstra(graph,startVertex,tree);
+
+	    if (tree.find(endVertex) == tree.end()) {
+	    	// no path found
+	      	Serial.writeline("N 0\n");
+	    }else{
+			// calculate path using searchtree
+			list<int> path;
+			int stepping = endVertex;
+			while (stepping != startVertex) {
+			    path.push_front(stepping); // push to path
+			    // crawl up the search tree one step
+			    stepping = tree[stepping].first;
+			}
+			path.push_front(startVertex); // push startVertex to path
+
+			// send size
+			Serial.writeline("N "+to_string(path.size())+"\n");
+			Serial.readline(1); // wait for acknowledgement
+			cout<< "N "<<path.size();
+
+			for (auto p: path) {
+				// loop through all waypoints in path
+				line = "W "+to_string(points[p].lat)+" "+to_string(points[p].lon)+"\n";
+				Serial.writeline(line);
+			    Serial.readline(1); //wait for acknowledgement
+			}
+			Serial.writeline("E\n"); //End
 		}
-		cout << "E" << endl; //end
 	}
+	
 }
 
 int main(){
+
     WDigraph graph;
     unordered_map<int, PIL> tree;
 	unordered_map<int, Point> points;
@@ -168,10 +192,19 @@ int main(){
 	readGraph("edmonton-roads-2.0.1.txt",graph,points);
 
 	// read request
-	char command;
-	cin >> command;
-	if (command == 'R'){
-		// request
-		request(graph, tree, points);
+	string clientRequest;
+	
+	while (true){
+		cout<<"waiting for request"<<endl;
+		clientRequest = Serial.readline();
+		cout<<"request code: "<<clientRequest<<endl;
+		
+		if (strcmp(clientRequest.c_str(),"R")){
+			// if begins with R
+			cout<<"going to request"<<endl;
+			request(graph, tree, points);
+		}
+		cout<<"after request"<<endl;
 	}
+	
 }

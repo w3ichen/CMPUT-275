@@ -56,7 +56,7 @@ if (Serial.available()){
     }
 }
 
-/*
+
   if (Serial.available()) {
       // read the incoming byte:
       char in_char = Serial.read();
@@ -76,7 +76,7 @@ if (Serial.available()){
           }
         }
     }
-    */
+    
 
 
   }

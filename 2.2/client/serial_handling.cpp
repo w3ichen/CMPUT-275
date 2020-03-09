@@ -31,43 +31,52 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
 
   // TODO: implement the communication protocol from the assignment
 
+  enum {INITIAL_REQUEST, GET_WAYPOINTS, TIMEOUT, END} curr_mode = INITIAL_REQUEST;
   // for now, nothing is stored
   shared.num_waypoints = 0;
-/*
+
   // set up buffer as empty string
   buf_len = 0;
   buffer[buf_len] = 0;
-
-  // sending request to server
-  bufferAdd('R'); bufferAdd(' ');bufferAdd(start.lon);bufferAdd(' ');
-  bufferAdd(start.lat); bufferAdd(' '); bufferAdd(end.lon); bufferAdd(' ');
-  bufferAdd(end.lat);
-  process_line();
-
-  
-  if (Serial.available()) {
-      // read the incoming byte:
-      char in_char = Serial.read();
-
-      // if end of line is received, waiting for line is done:
-      if (in_char == '\n' || in_char == '\r') {
-          // now we process the buffer
-          process_line();
-          }
-      else {
-          // add character to buffer, provided that we don't overflow.
-          // drop any excess characters.
-          if ( buf_len < buf_size-1 ) {
-              buffer[buf_len] = in_char;
-              buf_len++;
-              buffer[buf_len] = 0;
-          }
-        }
+  while (curr_mode != END){
+    // sending request to server
+    if (curr_mode == INITIAL_REQUEST){
+      bufferAdd('R'); process_line(); //send request code
+      Serial.println(start.lon);
+      Serial.println(start.lat);
+      Serial.println(start.lon);
+      Serial.println(start.lat);
+      curr_mode = GET_WAYPOINTS;
     }
 
+    char in_char = Serial.read(); // Read in N
+    shared.num_waypoints = Serial.read(); // number of way points
+
+    if (Serial.available() && curr_mode == GET_WAYPOINTS) {
+        // read the incoming byte:
+        in_char = Serial.read();
+
+        // if end of line is received, waiting for line is done:
+        if (in_char == '\n' || in_char == '\r') {
+            // now we process the buffer
+            process_line();
+            Serial.println("A\n"); //send acknowledgement
+        }
+        else {
+            // add character to buffer, provided that we don't overflow.
+            // drop any excess characters.
+            if ( buf_len < buf_size-1 ) {
+                buffer[buf_len] = in_char;
+                buf_len++;
+                buffer[buf_len] = 0;
+            }
+          }
+      }
+      curr_mode = END;
+  }
   // 1 indicates a successful exchange, of course you should only output 1
   // in your final solution if the exchange was indeed successful
   // (otherwise, return 0 if the communication failed)
   return 1;
-  */
+  
 }
