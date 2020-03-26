@@ -127,7 +127,7 @@ void request(WDigraph graph, unordered_map<int, PIL> tree,
 		end.lon = atoi(strtok(NULL, " "));
 		end.lat = atoi(strtok(NULL, " "));
 
-		cout<<"R "<<start.lon<<" "<<start.lat<<" "<<end.lon<<" "<<end.lat<<endl;
+		cout<<"Arduino: R "<<start.lon<<" "<<start.lat<<" "<<end.lon<<" "<<end.lat<<endl;
 		curr_mode = CALCULATE_ROUTE;
 	}
 	if (curr_mode == CALCULATE_ROUTE){
@@ -164,11 +164,12 @@ void request(WDigraph graph, unordered_map<int, PIL> tree,
 			}
 			path.push_front(startVertex); // push startVertex to path
 
-			// send size
-			Serial.writeline("N "+to_string(path.size())+"\n");
-			cout<< "N "<<path.size()<<endl;
+			// send waypoint number
+			Serial.writeline("N "+to_string(path.size())+"\n"); 
+			cout<< "Server: N "<<path.size()<<endl;
 			// wait for acknowledgement. if A != A then there is an issue
-			A = 'X'; A = Serial.readline(); 
+			cout<<"waiting for acknowledgement"<<endl;
+			A = 'X'; A = Serial.readline();   cout<<"done reading the line"<<endl;
 			cout<<"Arduino: "<<A;
 
 			for (auto p: path) {
@@ -179,11 +180,7 @@ void request(WDigraph graph, unordered_map<int, PIL> tree,
 			    A = 'X'; A = Serial.readline(); //wait for acknowledgement
 			   	cout<<"Arduino: "<<A;
 			}
-cout<<"outside for loop"<<endl;
-		    A = 'X'; A = Serial.readline(100); //wait for acknowledgement
-cout<<"after read line"<<endl;
-		   	cout<<"Arduino: "<<A;
-			Serial.writeline("E"); //End
+			Serial.writeline("E"); // send End
 			cout<<"E"<<endl;
 			cout<<"A is now: "<<A<<endl;
 		}
@@ -204,13 +201,11 @@ int main(){
 	char charLine[1000];
 	bool validRequest = false;
 	while (true){
-		cout<<"waiting for request..."<<endl;
+		cout<<"waiting for request ..."<<endl;
 		clientRequest = Serial.readline(); // read in Request line
-		cout<<"Arduino: " << clientRequest << endl;
 		strcpy(charLine, clientRequest.c_str()); // copy string to char[] for use in strtok
-		cout<<"converted to char"<<endl;
 		string R = strtok(charLine, " "); // get R from string
-		cout<<"R is "<<R<<endl;
+		cout<<"Request code: "<<R<<endl;
 		if (strcmp(R.c_str(),"R ")){
 			validRequest = true; 
 		}

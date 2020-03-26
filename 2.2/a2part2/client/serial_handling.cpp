@@ -37,7 +37,7 @@ void bufferAdd(char newChar){
   buf_len++;
   buffer[buf_len] = 0;
 }
-
+int testing = 0;
 uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
   // Currently this does not communicate over the serial port.
   // It just stores a path length of 0. You should make it communicate with
@@ -67,19 +67,19 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
     }
     if (Serial.available() && curr_mode == WAY_NUM){
       in_char = Serial.read(); //read in N
+
       while (in_char != '\n'){
         in_char = Serial.read(); // Read in N
         bufferAdd(in_char); //add to digits of number to buffer
       }
       String num_waypoints_str = strtok(buffer,"");
       shared.num_waypoints = (num_waypoints_str).toInt(); // number of way points
-
       // clear the buffer
       buf_len = 0;
       buffer[buf_len] = 0;
-      curr_mode = GET_WAYPOINTS;
-      //send acknowledgement
-      Serial.print("A\n"); 
+      curr_mode = GET_WAYPOINTS; // next
+      send acknowledgement
+      Serial.print("A\n");
     }
     if (Serial.available() && curr_mode == GET_WAYPOINTS) {
         // read the incoming byte:
@@ -102,7 +102,6 @@ uint8_t get_waypoints(const lon_lat_32& start, const lon_lat_32& end) {
             }
         }
       }
-
   }
   // 1 indicates a successful exchange, of course you should only output 1
   // in your final solution if the exchange was indeed successful
