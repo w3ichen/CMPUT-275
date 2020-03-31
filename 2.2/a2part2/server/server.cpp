@@ -99,123 +99,110 @@ void readGraph(string filename, WDigraph& graph, unordered_map<int, Point>& poin
   	inFile.close(); //close file
 }
 
-void request(WDigraph graph, unordered_map<int, PIL> tree,
-			 unordered_map<int, Point> points, 	string clientRequest){
-/*
-	Processes route request
-	Arguments: graph with all vertices and edgies, unordered map to
-			store search tree, points to store lat and lon of each vertex
-			charLine is the string with start and end lat and lon from the arduino
-	Returns: tree through pass by reference
-*/
-	// declare variables
-	enum {INITIAL_REQUEST, CALCULATE_ROUTE, TIMEOUT} curr_mode = INITIAL_REQUEST;
-
-	Point start; 
-	Point end;
-	string A;
-	string line;
-	char charLine[1000];
-
-	// read in user request
-	if (curr_mode == INITIAL_REQUEST){
-		// (1) get lat and lon of start and end points
-		strcpy(charLine, clientRequest.c_str()); // copy string to char[] for use in strtok
-		line = (strtok(charLine, " ")); // R
-		start.lon = atoi(strtok(NULL, " ")); //converts from char to str to int
-		start.lat = atoi(strtok(NULL, " "));
-		end.lon = atoi(strtok(NULL, " "));
-		end.lat = atoi(strtok(NULL, " "));
-
-		cout<<"Arduino: R "<<start.lon<<" "<<start.lat<<" "<<end.lon<<" "<<end.lat<<endl;
-		curr_mode = CALCULATE_ROUTE;
-	}
-	if (curr_mode == CALCULATE_ROUTE){
-		// find the closest vertices using Points
-		long long startMin = 9999; // arbitrary large number
-		long long endMin = 9999;
-		long long startVertex, endVertex;
-		for (auto p: points){
-			if (manhattan(p.second, start) < startMin){
-				// if closer than start minimum
-				startMin = manhattan(p.second, start);
-				startVertex = p.first; // p.first is the vertex number
-			}
-			if (manhattan(p.second, end) < endMin){
-				// same for end coordinates
-				endMin = manhattan(p.second, end);
-				endVertex = p.first;
-			}
-		}
-		// generate search tree of startVertex using dijkstra 
-		dijkstra(graph,startVertex,tree);
-	    if (tree.find(endVertex) == tree.end()) {
-	    	// no path found
-	      	Serial.writeline("N 0\n");
-	      	cout << "No Path" <<endl;
-	    }else{
-			// calculate path using searchtree
-			list<int> path;
-			int stepping = endVertex;
-			while (stepping != startVertex) {
-			    path.push_front(stepping); // push to path
-			    // crawl up the search tree one step
-			    stepping = tree[stepping].first;
-			}
-			path.push_front(startVertex); // push startVertex to path
-
-			// send waypoint number
-			Serial.writeline("N "+to_string(path.size())+"\n"); 
-			cout<< "Server: N "<<path.size()<<endl;
-			// wait for acknowledgement. if A != A then there is an issue
-			cout<<"waiting for acknowledgement"<<endl;
-			A = 'X'; A = Serial.readline();   cout<<"done reading the line"<<endl;
-			cout<<"Arduino: "<<A;
-
-			for (auto p: path) {
-				// loop through all waypoints in path
-				line = "W "+to_string(points[p].lon)+" "+to_string(points[p].lat)+"\n";
-				Serial.writeline(line);
-				cout<<"Server: "<<line;
-			    A = 'X'; A = Serial.readline(); //wait for acknowledgement
-			   	cout<<"Arduino: "<<A;
-			}
-			Serial.writeline("E"); // send End
-			cout<<"E"<<endl;
-			cout<<"A is now: "<<A<<endl;
-		}
-	}
-}
-
 int main(){
 
     WDigraph graph;
     unordered_map<int, PIL> tree;
 	unordered_map<int, Point> points;
+	// read request
+	string clientRequest;
+	Point start; 
+	Point end;
+	string line;
+	list<int> path;
+	char charLine[1000];
+	enum {INITIAL_REQUEST, CALCULATE_ROUTE, SEND_WAYPOINTS} curr_mode = INITIAL_REQUEST;
 
 	// read graph from txt file
 	readGraph("edmonton-roads-2.0.1.txt",graph,points);
 
 	// read request
-	string clientRequest;
-	char charLine[1000];
-	bool validRequest = false;
 	while (true){
-		cout<<"waiting for request ..."<<endl;
-		clientRequest = Serial.readline(); // read in Request line
-		strcpy(charLine, clientRequest.c_str()); // copy string to char[] for use in strtok
-		string R = strtok(charLine, " "); // get R from string
-		cout<<"Request code: "<<R<<endl;
-		if (strcmp(R.c_str(),"R ")){
-			validRequest = true; 
+
+		// read in user request
+		if (curr_mode == INITIAL_REQUEST){
+			cout<<"waiting for request ..."<<endl;
+			// (1) get lat and lon of start and end points
+			clientRequest = Serial.readline(); // read in Request line
+			cout<<"Client Request: "<<clientRequest;
+			strcpy(charLine, clientRequest.c_str()); // copy string to char[] for use in strtok
+			line = (strtok(charLine, " ")); // R
+			if (line == "R"){
+				cout<<"processing request"<<endl;
+				start.lon = atoi(strtok(NULL, " ")); //converts from char to str to int
+				start.lat = atoi(strtok(NULL, " "));
+				end.lon = atoi(strtok(NULL, " "));
+				end.lat = atoi(strtok(NULL, " "));
+				cout<<"Arduino: R "<<start.lon<<" "<<start.lat<<" "<<end.lon<<" "<<end.lat<<endl;
+				curr_mode = CALCULATE_ROUTE;
+			}
 		}
-		if (validRequest){
-			// if begins with R
-			cout<<"going to request"<<endl;
-			request(graph, tree, points, clientRequest);
+		else if (curr_mode == CALCULATE_ROUTE){
+			// find the closest vertices using Points
+			long long startMin = 9999; // arbitrary large number
+			long long endMin = 9999;
+			long long startVertex, endVertex;
+			// first find the closest points
+			for (auto p: points){
+				if (manhattan(p.second, start) < startMin){
+					// if closer than start minimum
+					startMin = manhattan(p.second, start);
+					startVertex = p.first; // p.first is the vertex number
+				}
+				if (manhattan(p.second, end) < endMin){
+					// same for end coordinates
+					endMin = manhattan(p.second, end);
+					endVertex = p.first;
+				}
+			}
+			// generate search tree of startVertex using dijkstra 
+			dijkstra(graph,startVertex,tree);
+		    if (tree.find(endVertex) == tree.end()) {
+		    	// no path found
+		    	line = "N 0 \n";
+		    	Serial.writeline(line);
+		      	cout << "No Path" <<endl;
+		      	curr_mode = INITIAL_REQUEST; // don't send waypoints
+		    }else{
+		    	path.clear(); // clear out old path
+				// calculate path using searchtree
+				int stepping = endVertex;
+				while (stepping != startVertex) {
+				    path.push_front(stepping); // push to path
+				    // crawl up the search tree one step
+				    stepping = tree[stepping].first;
+				}
+				path.push_front(startVertex); // push startVertex to path
+				curr_mode = SEND_WAYPOINTS;
+			}
 		}
-		cout<<"request complete"<<endl<<endl;
-		validRequest = false; //reset
+		else if (curr_mode == SEND_WAYPOINTS){
+			// send waypoint number
+			line = "N "+to_string(path.size())+" \n";
+			Serial.writeline(line); 
+			cout<< "Server: N "<<path.size()<<endl;
+
+			for (auto p: path) {
+				string A = Serial.readline(1000); //wait for acknowledgement
+			   	cout<<"Arduino: "<<A;
+				// loop through all waypoints in path
+				line = "W "+to_string(points[p].lon)+" "+to_string(points[p].lat)+"\n";
+				Serial.writeline(line);
+				cout<<"Server: "<<line;
+
+			}
+			string A = Serial.readline(1000); //wait for acknowledgement
+		   	cout<<"Arduino: "<<A;
+			Serial.writeline("E\n"); // send End
+			cout<<"E"<<endl;
+			tree.clear(); // reset the tree
+			curr_mode = INITIAL_REQUEST; // go back to request mode
+		}
+
+
+
+
+
 	}
 	
 }
