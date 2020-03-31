@@ -103,7 +103,6 @@ int x=0;
         if (in_char == 'E'){
           //end communication
           curr_mode = END; 
-          Serial.flush();
           return 1;
         }
         else if (in_char == '\n' || in_char == '\r') {
