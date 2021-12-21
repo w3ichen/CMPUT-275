@@ -1,0 +1,31 @@
+Name: Weichen Qiu
+ID: 1578205
+CMPUT 275 Winter 2020
+
+Weekly Exercise #5: Graph Concepts
+
+
+Included Files:
+- graph_concepts.cpp
+- digraph.cpp
+- digraph.h
+- breadthfirstsearch.cpp
+- README
+- Makefile
+
+
+Running Instructions:
+	1. enter "make graph_concepts" into the terminal
+	2. then enter "./graph_concepts edmonton-roads-2.0.1.txt"
+		into the terminal to run the edmonton roads file
+
+Accessories: n/a
+
+Wiring instructions:
+	n/a
+
+Notes and Assumptions:
+	- Code was built off starter code
+	- I copied the breadthfirstsearch funtion into graph_concepts.cpp
+		because included the file as a header resulted in redefinition errors
+	

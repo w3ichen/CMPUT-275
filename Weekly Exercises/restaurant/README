@@ -1,0 +1,27 @@
+Name: Weichen Qiu
+ID: 1578205
+CMPUT 275 Winter 2020
+
+Weekly Assignment #2: Restaurant
+
+
+Included Files:
+- get_restaurant.cpp
+- README
+- Makefile
+
+
+Running Instructions:
+	1. Upload the program to the arduino with make upload
+	2. Press the SLOW button and wait for ~5 seconds
+	3. Press the FAST button
+
+Accessories: arduino, touchscreen display, computer
+
+Wiring instructions:
+	1. Align the pins of touchscreen with arduino and press down all the way
+	2. Connect arduino to computer with USB cable
+
+
+Notes and Assumptions:
+	- this code was built on top of the code developed in class

@@ -1,0 +1,26 @@
+Name: Weichen Qiu
+ID: 1578205
+CMPUT 275 Winter 2020
+
+Weekly Exercise #3: PseudoCode to Code
+
+
+Included Files:
+- flipflop.cpp
+- textmatch.cpp
+- README
+- Makefile
+
+
+Running Instructions:
+	1. execute "make upload" in the terminal
+
+Accessories: none
+
+Wiring instructions:
+	none
+
+
+Notes and Assumptions:
+	Not sure why I am getting presentation error for flipflop functionin test center
+	

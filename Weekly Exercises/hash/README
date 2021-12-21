@@ -1,0 +1,27 @@
+Name: Weichen Qiu
+ID: 1578205
+CMPUT 275 Winter 2020
+
+Weekly Exercise #4: Dynamic Hashing
+
+
+Included Files:
+- exercise4.cpp
+- hashtable.h
+- linkedlist.h
+- README
+- Makefile
+
+
+Running Instructions:
+	1. type make into the terminal to run the makefile
+
+Accessories: n/a
+
+Wiring instructions:
+	n/a
+
+Notes and Assumptions:
+	- When user passes in no arguments for the class, the brackets must be dropped
+		that is table() will not work, must do table
+	

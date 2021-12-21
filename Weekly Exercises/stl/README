@@ -1,0 +1,36 @@
+Name: Weichen Qiu
+ID: 1578205
+CMPUT 275 Winter 2020
+
+Weekly Exercise #6: STL Concepts
+
+
+Included Files:
+- student_hash.cpp
+- complex_postfix.cpp
+- README
+- Makefile
+
+
+Running Instructions:
+	1. Enter make into terminal to make executables
+	2. Run ./student to run student_hash code
+		a. I name id grade  => to insert a new student
+		b. R id  => to remove a student by id
+		c. Q i id  => to find one student by id
+		d. Q n name  => to find all students with that name
+		e. Q g grade  => to final all students with that grade
+		d. S  => to stop the session
+	3. Run ./calc to run the complex_postfix code
+		a. V r1 r2  => to add a new complex number, wher r1 is real, r2 is imaginary
+		b. B op  => binary operator, op is "+" or "-" or "*"
+		c. U op  => Unary operator, op is "-" or "c"
+		d. S  => stop the session
+
+
+Accessories: n/a
+
+Wiring instructions: n/a
+
+Notes and Assumptions:
+	- n/a
